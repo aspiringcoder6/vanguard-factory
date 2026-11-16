@@ -1,23 +1,212 @@
 /**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
+ * Homepage — phong cách SaaS landing (tham chiếu switchagents.ai),
+ * bảng màu đỏ – đen – trắng.
  */
 
-.heroBanner {
-  padding: 4.5rem 0 3rem;
+/* ===== Hero — luôn nền đen, cả light & dark mode ===== */
+.hero {
+  background: #0a0a0b;
+  color: #ffffff;
   text-align: center;
-  position: relative;
-  overflow: hidden;
+  padding: 5.5rem 0 5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+.heroEyebrow {
+  color: #9aa0a6;
+  margin-bottom: 1.25rem;
 }
 
-.buttons {
+.heroTitle {
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0 0 1.25rem;
+}
+
+.heroSubtitle {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: #9aa0a6;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.heroButtons,
+.ctaButtons {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 2rem;
+}
+
+/* Nút outline trắng — dùng trên nền đen của hero / CTA */
+.btnGhost {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #ffffff;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* ===== Sections ===== */
+.section {
+  padding: 4.5rem 0 4rem;
+}
+
+.sectionHead {
+  max-width: 680px;
+  margin: 0 auto 2.5rem;
+  text-align: center;
+}
+
+.sectionHead .eyebrow {
+  justify-content: center;
+  margin-bottom: 0.9rem;
+}
+
+.sectionTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* ===== Feature cards ===== */
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card:hover {
+  border-color: rgba(231, 69, 57, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+}
+
+[data-theme='dark'] .card:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.cardEyebrow {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin: 0;
+}
+
+.cardTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.cardText {
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  flex-grow: 1;
+  margin: 0;
+}
+
+.cardLink {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--red);
+  margin-top: 4px;
+}
+
+.cardLink:hover {
+  color: var(--red-hover);
+}
+
+/* ===== Stats band ===== */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.stat {
+  border-left: 2px solid var(--red);
+  padding-left: 16px;
+}
+
+.statValue {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ifm-font-color-base);
+}
+
+.statLabel {
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.92rem;
+  margin-top: 6px;
+}
+
+/* ===== Final CTA — luôn nền đen ===== */
+.cta {
+  background: #0a0a0b;
+  color: #ffffff;
+  text-align: center;
+  padding: 4.5rem 0;
+  margin-top: 2rem;
+}
+
+.ctaTitle {
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0;
+}
+
+.ctaText {
+  color: #9aa0a6;
+  max-width: 560px;
+  margin: 0.9rem auto 0;
+}
+
+/* ===== Responsive ===== */
+@media screen and (max-width: 996px) {
+  .hero {
+    padding: 3.5rem 1.5rem 3rem;
+  }
+
+  .section {
+    padding: 3rem 1.5rem;
+  }
+
+  .featuresGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

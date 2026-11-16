@@ -91,6 +91,14 @@ const config: Config = {
     colorMode: {
       respectPrefersColorScheme: true,
     },
+    announcementBar: {
+      id: 'adlc-launch',
+      content:
+        'Kiến trúc 4 tầng của ADLC Factory đã có tài liệu đầy đủ — <a href="/vanguard-factory/docs/architecture/tong-quan-4-tang">đọc ngay →</a>',
+      backgroundColor: '#0a0a0b',
+      textColor: '#ffffff',
+      isCloseable: true,
+    },
     navbar: {
       title: 'ADLC Factory',
       logo: {
@@ -105,22 +113,63 @@ const config: Config = {
           label: 'Tài liệu',
         },
         {
-          href: 'https://github.com/vanguard-lint/vanguard-factory',
-          label: 'GitHub',
+          type: 'dropdown',
+          label: 'Kiến trúc',
+          position: 'left',
+          items: [
+            {label: 'Tổng quan 4 tầng', to: '/docs/architecture/tong-quan-4-tang'},
+            {label: 'Vòng đời 7 trạm', to: '/docs/fundamentals/vong-doi-7-tram'},
+            {label: 'Tầng 4 — Sandbox', to: '/docs/architecture/tang-4-sandbox/tong-quan'},
+          ],
+        },
+        {
+          type: 'dropdown',
+          label: 'Vận hành',
+          position: 'left',
+          items: [
+            {label: 'Chạy hệ thống lần đầu', to: '/docs/user-guides/dung-he-thong-lan-dau'},
+            {label: 'API REST', to: '/docs/reference/api-rest'},
+            {label: 'MCP Tools', to: '/docs/reference/mcp-tools'},
+            {label: 'Thuật ngữ', to: '/docs/reference/thuat-ngu'},
+          ],
+        },
+        {
+          type: 'html',
           position: 'right',
+          value: '<a class="btn btn--primary" href="/vanguard-factory/docs/">Bắt đầu</a>',
+        },
+        {
+          type: 'html',
+          position: 'right',
+          value:
+            '<a class="btn btn--ghost" href="https://github.com/vanguard-lint/vanguard-factory" target="_blank" rel="noopener noreferrer">GitHub</a>',
         },
       ],
     },
     footer: {
       style: 'dark',
+      logo: {
+        alt: 'ADLC Factory logo',
+        src: 'img/logo-vanguard.svg',
+        width: 32,
+        height: 32,
+      },
       links: [
         {
-          title: 'Tài liệu',
+          title: 'Nền tảng',
           items: [
-            {label: 'Trang đích', to: '/docs/'},
-            {label: 'Nền tảng ADLC', to: '/docs/fundamentals/bai-toan'},
-            {label: 'Kiến trúc 4 tầng', to: '/docs/architecture/tong-quan-4-tang'},
-            {label: 'Hướng dẫn chạy lần đầu', to: '/docs/user-guides/dung-he-thong-lan-dau'},
+            {label: 'Bài toán', to: '/docs/fundamentals/bai-toan'},
+            {label: 'Triết lý', to: '/docs/fundamentals/triet-ly'},
+            {label: 'Vòng đời 7 trạm', to: '/docs/fundamentals/vong-doi-7-tram'},
+            {label: 'Tổng quan 4 tầng', to: '/docs/architecture/tong-quan-4-tang'},
+          ],
+        },
+        {
+          title: 'Vận hành',
+          items: [
+            {label: 'Chạy hệ thống lần đầu', to: '/docs/user-guides/dung-he-thong-lan-dau'},
+            {label: 'Giám sát & cảnh báo', to: '/docs/admin-operations/monitoring-canh-bao'},
+            {label: 'Runbook sự cố', to: '/docs/admin-operations/runbook-su-co'},
           ],
         },
         {
@@ -129,6 +178,18 @@ const config: Config = {
             {label: 'API REST', to: '/docs/reference/api-rest'},
             {label: 'MCP Tools', to: '/docs/reference/mcp-tools'},
             {label: 'Thuật ngữ', to: '/docs/reference/thuat-ngu'},
+            {label: 'FAQ', to: '/docs/reference/faq'},
+          ],
+        },
+        {
+          title: 'Cộng đồng',
+          items: [
+            {
+              label: 'GitHub',
+              href: 'https://github.com/vanguard-lint/vanguard-factory',
+            },
+            {label: 'Đóng góp tài liệu', to: '/docs/developer-docs/dong-gop'},
+            {label: 'Blog', to: '/blog'},
           ],
         },
       ],
@@ -136,7 +197,7 @@ const config: Config = {
     },
     prism: {
       theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
+      darkTheme: prismThemes.vsDark,
     },
   } satisfies Preset.ThemeConfig,
 };
