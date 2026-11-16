@@ -2,10 +2,10 @@
 @import url('https://fonts.googleapis.com/css?family=Material+Icons&display=block');
 
 /**
- * Vanguard Spec Theme
- * Primary brand color: #e74539
- * Font base: Overpass
- * Font mono / headings: Overpass Mono
+ * Vanguard Spec Theme — Đỏ / Đen / Trắng
+ * Nguyên tắc: ~90% màn hình là đen–trắng–xám, đỏ #e74539 là MÀU ACCENT DUY NHẤT
+ * (nút chính, link hover, điểm nhấn). Không dùng thêm màu nào khác.
+ * Font base: Overpass · Font mono / nhãn: Overpass Mono
  */
 
 :root {
@@ -13,7 +13,17 @@
   --ifm-font-family-monospace: 'Overpass Mono', monospace;
   --ifm-heading-font-family: 'Overpass', system-ui, -apple-system, sans-serif;
 
-  /* Vanguard Brand Color Palette (#e74539) */
+  /* ===== Bảng màu đỏ – đen – trắng ===== */
+  --red: #e74539;
+  --red-hover: #c53b30;
+  --black: #0a0a0b;
+  --ink: #16181d;
+  --white: #ffffff;
+  --paper: #f6f5f4;
+  --line: rgba(0, 0, 0, 0.12);
+  --line-strong: rgba(0, 0, 0, 0.28);
+
+  /* Docusaurus primary scale (đỏ) — Infima sinh link/alert/button từ đây */
   --ifm-color-primary: #e74539;
   --ifm-color-primary-dark: #d03e33;
   --ifm-color-primary-darker: #c53b30;
@@ -21,77 +31,108 @@
   --ifm-color-primary-light: #eb5e54;
   --ifm-color-primary-lighter: #ee6b62;
   --ifm-color-primary-lightest: #f3928b;
-  --red-soft: rgba(231, 69, 57, 0.12);
-  --disc: #d3d1d2;
-  --disc-ink: #161a1d;
-  --rule: #9aa0a6;
+  --red-soft: rgba(231, 69, 57, 0.1);
   --on-primary: #fff;
+
+  /* Alias dùng bởi component AdlcLine (SVG lifecycle) */
+  --disc: #d9d7d8;
+  --disc-ink: #16181d;
+  --rule: #9aa0a6;
 
   --ifm-code-font-size: 92%;
   --docusaurus-highlighted-code-line-bg: rgba(231, 69, 57, 0.1);
 
-  /* Light Theme Colors */
-  --ifm-background-color: #f5f3f4;
-  --ifm-background-surface-color: #ffffff;
-  --ifm-navbar-background-color: #f5f3f4;
-  --ifm-navbar-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.08);
-  --ifm-footer-background-color: #202124;
-  --ifm-font-color-base: #161a1d;
+  /* Light theme — nền giấy xám sáng, surface trắng */
+  --ifm-background-color: var(--paper);
+  --ifm-background-surface-color: var(--white);
+  --ifm-navbar-background-color: var(--paper);
+  --ifm-navbar-shadow: none;
+  --ifm-footer-background-color: var(--black);
+  --ifm-font-color-base: var(--ink);
   --ifm-color-content-secondary: #5f6368;
-  --ifm-toc-border-color: #dadce0;
-  --ifm-hr-border-color: #dadce0;
-  --ifm-card-background-color: #ffffff;
+  --ifm-toc-border-color: var(--line);
+  --ifm-hr-border-color: var(--line);
+  --ifm-card-background-color: var(--white);
+  --ifm-card-border-radius: 12px;
 
-  --ifm-button-border-radius: 4px;
-  --ifm-global-radius: 6px;
+  --ifm-button-border-radius: 8px;
+  --ifm-global-radius: 12px;
+  --ifm-navbar-padding-vertical: 0.6rem;
+  --ifm-navbar-padding-horizontal: 1.5rem;
+  --ifm-line-height-base: 1.65;
 }
 
-/* Dark Theme Colors */
+/* Dark theme — nền đen, surface than, đỏ sáng hơn một bậc để đủ contrast */
 [data-theme='dark'] {
-  --ifm-font-family-base: 'Overpass', system-ui, -apple-system, sans-serif;
-  --ifm-font-family-monospace: 'Overpass Mono', monospace;
-  --ifm-heading-font-family: 'Overpass', system-ui, -apple-system, sans-serif;
+  --red: #f2564a;
+  --red-hover: #e74539;
+  --red-soft: rgba(242, 86, 74, 0.14);
+  --line: rgba(255, 255, 255, 0.14);
+  --line-strong: rgba(255, 255, 255, 0.3);
 
-  --ifm-color-primary: #f0877d;
-  --ifm-color-primary-dark: #ec6f63;
-  --ifm-color-primary-darker: #ea6356;
-  --ifm-color-primary-darkest: #e53e2e;
-  --ifm-color-primary-light: #f49f97;
-  --ifm-color-primary-lighter: #f6aba4;
-  --ifm-color-primary-lightest: #fbcfcb;
-  --red-soft: rgba(240, 135, 125, 0.16);
-  --on-primary: #292929;
-  --disc: #c9c9c9;
-  --disc-ink: #292929;
-  --rule: #6b6b6b;
+  --ifm-color-primary: #f2564a;
+  --ifm-color-primary-dark: #f04a3d;
+  --ifm-color-primary-darker: #e74539;
+  --ifm-color-primary-darkest: #c53b30;
+  --ifm-color-primary-light: #f56f65;
+  --ifm-color-primary-lighter: #f68a82;
+  --ifm-color-primary-lightest: #fbb0aa;
+  --on-primary: #fff;
 
   /* Vanguard OSV-derived Dark Backgrounds */
-  --ifm-background-color: #292929;
-  --ifm-background-surface-color: #202020;
-  --ifm-navbar-background-color: #292929;
-  --ifm-navbar-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --ifm-footer-background-color: #202020;
-  --ifm-font-color-base: #ffffff;
+  --ifm-background-color: #0a0a0b;
+  --ifm-background-surface-color: #141416;
+  --ifm-navbar-background-color: #0a0a0b;
+  --ifm-navbar-shadow: none;
+  --ifm-footer-background-color: #0a0a0b;
+  --ifm-font-color-base: #f5f5f5;
   --ifm-color-content-secondary: #9aa0a6;
-  --ifm-toc-border-color: #404040;
-  --ifm-hr-border-color: #404040;
-  --ifm-card-background-color: #202020;
+  --ifm-toc-border-color: var(--line);
+  --ifm-hr-border-color: var(--line);
+  --ifm-card-background-color: #141416;
 
-  --docusaurus-highlighted-code-line-bg: rgba(240, 135, 125, 0.15);
+  --docusaurus-highlighted-code-line-bg: rgba(242, 86, 74, 0.16);
+
+  /* Alias AdlcLine cho nền đen */
+  --disc: #c9c9c9;
+  --disc-ink: #0a0a0b;
+  --rule: #5b5b60;
 }
 
-/* Headings font styling */
+/* Headings — sans đậm, tracking chặt (phong cách SaaS landing) */
 h1, h2, h3, h4, h5, h6,
 .hero__title {
   font-family: var(--ifm-heading-font-family);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
-/* Navbar customization to match Vanguard */
+/* Nhãn eyebrow — mono uppercase với gạch đỏ, dùng mở đầu mỗi section */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ifm-color-content-secondary);
+  margin: 0;
+}
+.eyebrow::before {
+  content: '';
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--red);
+  flex: none;
+}
+
+/* ===== Navbar ===== */
 .navbar {
   border-bottom: 1px solid var(--ifm-toc-border-color);
-  padding: 0.75rem 2rem;
+  box-shadow: var(--ifm-navbar-shadow);
 }
 
 .navbar__brand {
@@ -99,149 +140,192 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .navbar__logo {
-  height: 32px;
+  height: 30px;
   width: auto;
 }
 
 .navbar__title,
 .navbar__brand b {
-  font-weight: var(--ifm-font-weight-semibold);
+  font-weight: 700;
   font-size: var(--ifm-navbar-link-font-size, 1rem);
-  letter-spacing: normal;
+  letter-spacing: -0.01em;
 }
 
-/* Link and Button styling - Exact Vanguard Spec Size */
-.button--primary,
-.hero--primary .button,
-.hero--primary .button--secondary {
+.navbar__link {
+  font-weight: 500;
+}
+
+/* Cặp nút kép bên phải navbar (render từ navbar item type: 'html') */
+.navbar .btn {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-family: var(--ifm-font-family-base);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.18s ease;
+}
+.navbar .btn--primary {
+  background: var(--red);
+  color: #ffffff !important;
+}
+.navbar .btn--primary:hover {
+  background: var(--red-hover);
+  color: #ffffff !important;
+  text-decoration: none;
+}
+.navbar .btn--ghost {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--ifm-font-color-base);
+}
+.navbar .btn--ghost:hover {
+  border-color: var(--ifm-font-color-base);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+}
+
+/* ===== Announcement bar — nền đen, link đỏ hồng ===== */
+.theme-announcement-bar {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 16px;
+}
+.theme-announcement-bar a {
+  color: #ff8d84;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.theme-announcement-bar a:hover {
+  color: #ffb0aa;
+}
+
+/* ===== Hệ nút: primary = đỏ đặc, secondary = viền (outline) ===== */
+.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 36px;
-  padding: 0 18px;
-  font-size: 0.95rem;
-  font-family: 'Overpass', sans-serif;
+  height: 40px;
+  padding: 0 20px;
   font-weight: 600;
-  border-radius: 4px;
-  background-color: #e74539 !important;
-  color: #ffffff !important;
-  border: 1px solid #e74539 !important;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  transition: all 0.18s ease-in-out;
+}
+
+.button--primary {
+  background-color: var(--red);
+  border-color: var(--red);
+  color: #ffffff;
+}
+.button--primary:hover {
+  background-color: var(--red-hover);
+  border-color: var(--red-hover);
+  color: #ffffff;
   text-decoration: none;
-  transition: all 0.2s ease-in-out;
 }
 
-.button--primary:hover,
-.hero--primary .button:hover,
-.hero--primary .button--secondary:hover {
-  background-color: rgba(231, 69, 57, 0.85) !important;
-  border-color: transparent !important;
-  color: #ffffff !important;
-  text-decoration: none;
-}
-
-/* Hero Section */
-.hero--primary {
-  background-color: var(--ifm-background-color);
-  color: var(--ifm-font-color-base);
-  border-bottom: 1px solid var(--ifm-toc-border-color);
-}
-
-[data-theme='dark'] .hero--primary {
-  background-color: #292929;
-}
-
-.hero__title {
-  font-family: var(--ifm-font-family-monospace) !important;
-  font-weight: 400 !important;
-  font-size: 2.75rem;
-  letter-spacing: -0.01em;
+.button--secondary {
+  background: transparent;
+  border-color: var(--line-strong);
   color: var(--ifm-font-color-base);
 }
-
-.hero__subtitle {
-  font-size: 1.35rem;
-  color: var(--ifm-color-content-secondary);
-  font-family: var(--ifm-font-family-base);
+.button--secondary:hover {
+  background: transparent;
+  border-color: var(--ifm-font-color-base);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
 }
 
 /* Badges / Tags */
 .badge--vanguard {
-  background-color: #e74539;
+  background-color: var(--red);
   color: #fff;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 2px 8px;
   font-family: 'Overpass Mono', monospace;
 }
 
 /* Search Box Styling */
 .navbar__search-input {
-  border-radius: 4px;
+  border-radius: 8px;
   font-family: 'Overpass', sans-serif;
   transition: all 0.2s ease;
 }
 
 .navbar__search-input:focus {
-  border-color: #e74539 !important;
-  box-shadow: 0 0 0 2px rgba(231, 69, 57, 0.2) !important;
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 2px var(--red-soft) !important;
 }
 
 [data-theme='dark'] .navbar__search-input {
-  background-color: #202020;
-  border: 1px solid #404040;
+  background-color: #141416;
+  border: 1px solid var(--line);
   color: #ffffff;
 }
 
 [data-theme='light'] .navbar__search-input {
   background-color: #ffffff;
-  border: 1px solid #dadce0;
-  color: #161a1d;
+  border: 1px solid var(--line);
+  color: var(--ink);
 }
 
-/* Footer Styling - Clean Monochrome & Brand Accent */
+/* ===== Footer — luôn nền đen, link hover đỏ ===== */
 .footer,
 .footer--dark {
-  background-color: #1a1a1a !important;
-  border-top: 1px solid var(--ifm-toc-border-color);
-  color: #bdc1c6 !important;
-  --ifm-footer-background-color: #1a1a1a;
-  --ifm-footer-color: #bdc1c6;
-  --ifm-footer-link-color: #bdc1c6;
-  --ifm-footer-link-hover-color: #e74539;
+  background-color: #0a0a0b !important;
+  border-top: 1px solid var(--line);
+  color: #a3a3a8 !important;
+  --ifm-footer-background-color: #0a0a0b;
+  --ifm-footer-color: #a3a3a8;
+  --ifm-footer-link-color: #a3a3a8;
+  --ifm-footer-link-hover-color: var(--red);
   --ifm-footer-title-color: #ffffff;
   padding: 3rem 0 2rem;
-}
-
-[data-theme='light'] .footer,
-[data-theme='light'] .footer--dark {
-  background-color: #161a1d !important;
-  border-top: 1px solid #dadce0;
 }
 
 .footer__title {
   color: #ffffff !important;
   font-family: var(--ifm-heading-font-family);
   font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 1rem;
 }
 
 .footer__link-item {
-  color: #bdc1c6 !important;
+  color: #a3a3a8 !important;
   font-family: 'Overpass', sans-serif;
   transition: color 0.2s ease;
 }
 
 .footer__link-item:hover {
-  color: #e74539 !important;
+  color: var(--red) !important;
   text-decoration: none;
 }
 
 .footer__copyright {
-  color: #80868b !important;
+  color: #6f6f75 !important;
   font-size: 0.85rem;
   margin-top: 2rem;
+}
+
+/* Card toàn cục: viền hairline thay bóng đổ, hover đổi viền sang đỏ */
+.card {
+  border: 1px solid var(--line);
+  box-shadow: none;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+.card:hover {
+  border-color: rgba(231, 69, 57, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+}
+[data-theme='dark'] .card:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
 /* ===== ADLC LIFECYCLE ===== */
@@ -345,4 +429,14 @@ h1, h2, h3, h4, h5, h6,
   fill: var(--ifm-color-content-secondary);
   font-family: var(--ifm-font-family-monospace);
   font-size: 13px;
+}
+
+/* ===== DOC CARDS: hiện đầy đủ tên & tóm tắt (không cắt bằng "…") ===== */
+/* Docusaurus mặc định gắn .text--truncate (nowrap + ellipsis) vào tiêu đề
+   và mô tả của card trong trang liệt kê mục tài liệu. Ghi đè để xuống dòng. */
+.theme-doc-card-title,
+.theme-doc-card-description {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
