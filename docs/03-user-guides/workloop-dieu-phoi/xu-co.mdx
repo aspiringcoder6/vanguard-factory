@@ -1,10 +1,13 @@
 ---
 title: Xử cố
 description: 401 DSH, stall → re-arm, pause/resume và các sự cố thường gặp.
-sidebar_position: 5
+sidebar_position: 6
 ---
 
 # Xử cố thường gặp
+
+Tra sự cố theo **triệu chứng → nguyên nhân → xử lý**. Cơ chế chịu lỗi phía sau:
+[Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi).
 
 ## 401 hàng loạt — token DSH đổi sau restart
 
@@ -60,9 +63,30 @@ người.
 | node `BUDGET_EXCEEDED` | vượt token budget của task | tăng `token_budget` hoặc tối ưu brief |
 | run kẹt `suspended` | PAUSE/duyệt chưa được xử lý | `resume_run` hoặc trả lời card duyệt |
 
-Runbook mở rộng cho admin: [Runbook sự cố](/docs/admin-operations/runbook-su-co).
+## Khi nào chuyển đội kỹ thuật
+
+Tự xử lý được khi lỗi nằm trong bảng trên và thuộc **cấu hình phía người dùng** (env, brief, spec).
+Chuyển đội kỹ thuật — kèm `job_id`, log backend và report node — khi:
+
+- Backend không lên dù đã đối chiếu env theo
+  [Cài đặt — Bước 2](/docs/user-guides/workloop-dieu-phoi/cai-dat#bước-2-tạo-script-chạy-backend) —
+  nghi ngờ lỗi nền tảng, không phải cấu hình.
+- Sync git lỗi kéo dài dù `git ls-remote <url>` thủ công thành công — lỗi nằm ở backend/harness.
+- Node chết lặp lại dù đã tăng ngân sách và sửa brief (`REARM_EXHAUSTED` lặp lại) — cần soi trace
+  Phoenix, khả năng là lỗi engine.
+- Lỗi không có trong bảng này và không tái hiện được — mở ticket kèm bằng chứng.
+
+Runbook mở rộng phía admin: [Runbook sự cố](/docs/admin-operations/runbook-su-co) ·
+giám sát & cảnh báo: [Monitoring & cảnh báo](/docs/admin-operations/monitoring-canh-bao).
 
 ## Kết quả đúng phải thấy
 
 Sau khi xử lý xong một sự cố: `curl :8100/api/health` trả `{"ok":true}` và run tiếp tục từ
 checkpoint mà không chạy lại node đã DONE.
+
+## Liên kết
+
+- Cơ chế chịu lỗi: [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi) ·
+  [Phục hồi gián đoạn](/docs/architecture/kiem-chung-phuc-hoi/phuc-hoi-gian-doan)
+- Trạng thái chuẩn: [Trạng thái](/docs/reference/trang-thai)
+- Runbook admin: [Runbook sự cố](/docs/admin-operations/runbook-su-co)

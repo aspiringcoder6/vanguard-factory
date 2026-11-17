@@ -1,10 +1,22 @@
 ---
 title: Vòng 4 bước — configure · run · quan sát · review
 description: Chu trình làm việc hằng ngày với một workflow trên Workloop.
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # Vòng 4 bước: configure → run → quan sát → review
+
+## Mục đích
+
+Chạy được một workflow từ đầu tới cuối: định nghĩa spec, khởi động run, theo dõi tiến độ và duyệt
+ở các điểm HITL. Đây là chu trình hằng ngày sau khi
+[cài đặt](/docs/user-guides/workloop-dieu-phoi/cai-dat) xong.
+
+## Điều kiện trước
+
+- Backend workloop đang chạy — `/api/health` trả `{"ok":true}`.
+- Một trong hai đường gọi: MCP `workloop-factory` đã cắm cho agent orchestrator, hoặc token
+  `WORKLOOP_TOKEN` để gọi REST.
 
 Cả 4 bước làm được qua 2 đường: **MCP** (nói chuyện với agent orchestrator bằng ngôn ngữ tự nhiên)
 hoặc **REST API** (gọi trực tiếp). Bảng tool đầy đủ: [MCP Tools](/docs/reference/mcp-tools) ·
@@ -94,13 +106,6 @@ review qua events (`node_review_pending/done`) và có thể xử lý khi review
 PAUSE dừng ở ranh giới giữa các bước chạy — node đang chạy hoàn tất tới checkpoint. Node đã xong
 không chạy lại khi resume. Cơ chế: [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi).
 
-## Kết quả đúng phải thấy
-
-- `get_run(job_id)` → `completed`; `get_report(job_id)` cho thấy mọi node ở trạng thái terminal,
-  node được duyệt có ghi nhận người duyệt + lý do.
-- Trên Gitea có PR từ nhánh agent — **chưa được merge** cho tới khi người duyệt gộp.
-- `git log` factory repo có commit `configure_workflow: <name>` — spec thay đổi luôn đi qua Git.
-
 ## Ví dụ — một câu cho agent orchestrator
 
 ```text
@@ -108,3 +113,29 @@ Dùng MCP workloop-factory: configure_workflow tạo workflow 'hello2' với 1 n
 (type WorkloopTask, role coder, brief: viết reports/hello.md 1 dòng 'hello world').
 run_workflow('hello2', fresh=true), poll get_run tới completed rồi get_report.
 ```
+
+## Kết quả đúng phải thấy
+
+- `get_run(job_id)` → `completed`; `get_report(job_id)` cho thấy mọi node ở trạng thái terminal,
+  node được duyệt có ghi nhận người duyệt + lý do.
+- Trên Gitea có PR từ nhánh agent — **chưa được merge** cho tới khi người duyệt gộp.
+- `git log` factory repo có commit `configure_workflow: <name>` — spec thay đổi luôn đi qua Git.
+
+## Lỗi thường gặp
+
+| Hiện tượng | Xử lý |
+|---|---|
+| Run kẹt `suspended` | trả lời card duyệt (tab **Duyệt**) hoặc `resume_run` |
+| Node kết thúc `NEEDS_CONTEXT` | bổ sung brief/context rồi chạy lại với `resume` |
+| 401 hàng loạt giữa chừng | token DSH đổi sau restart — cập nhật `DSH_TOKEN` rồi restart backend |
+| Workflow 404 khi run | gọi sync `POST /api/v1/flows/sync` sau khi push spec |
+
+Chi tiết từng lỗi + cơ chế: [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co).
+
+## Liên kết
+
+- Cú pháp spec: [Spec DSL](/docs/reference/spec-dsl) ·
+  [Viết workflow spec](/docs/developer-docs/viet-workflow-spec)
+- Quan sát bằng giao diện: [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard)
+- Cơ chế: [State machine vòng đời](/docs/architecture/tang-2-workflow/state-machine) ·
+  [Cổng duyệt & HITL](/docs/architecture/tang-2-workflow/cong-duyet-hitl)
