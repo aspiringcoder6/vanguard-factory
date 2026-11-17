@@ -9,7 +9,7 @@ sidebar_label: 4 · Triển khai Docker
 
 Compose hiện tại chỉ dựng **Broker**. Không tự dựng SUT, Cognee hay sandbox.
 
-:::note Thực tế file compose
+:::note[Thực tế file compose]
 `docker-compose.yml` build từ `docker/Dockerfile.broker-upgrade`, đặt tên image theo biến `TESTFORGE_SOURCE_REVISION`, mở cổng `9099`, gắn `./artifacts` và `./opt`, thêm `host.docker.internal:host-gateway`.
 :::
 
@@ -35,7 +35,7 @@ LOG_LEVEL=INFO
 LOG_JSON=true
 ```
 
-:::warning `TESTFORGE_SOURCE_REVISION` là bắt buộc
+:::warning[`TESTFORGE_SOURCE_REVISION` là bắt buộc]
 Compose dùng biến này làm tag image (`testforge-broker:${TESTFORGE_SOURCE_REVISION}`) và sẽ dừng nếu thiếu. Lấy giá trị từ `BUILD_REVISION` của bản phát hành.
 :::
 
@@ -115,7 +115,7 @@ Giữ volume và kết quả lịch sử để điều tra. Kiểm tra tương t
 | Nhãn image và runtime có thể lệch | Quản lý release bằng tag/digest + mã nguồn, không so sánh nhãn như cùng một phiên bản |
 | Dockerfile cài `@playwright/test` global không pin và dùng `requirements.txt` | Khi phát hành chính thức phải ghi lại phiên bản thực tế và kiểm chứng build lặp lại |
 
-:::tip Tag bất biến
+:::tip[Tag bất biến]
 Dùng tag release bất biến hoặc digest. Bước này là yêu cầu **quản trị phát hành**, không tự đạt được từ một nhãn phiên bản đang có.
 :::
 

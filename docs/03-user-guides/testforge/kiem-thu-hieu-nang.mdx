@@ -9,7 +9,7 @@ sidebar_label: 8 · Hiệu năng
 
 ## Nguyên tắc trước khi tăng tải
 
-:::danger Một request đơn phải đúng trước
+:::danger[Một request đơn phải đúng trước]
 Chỉ tăng tải sau khi **một request đơn** đã được xác minh đúng endpoint, method, dữ liệu, query và xác thực. Trace 2xx chỉ là **gợi ý** flow; nó không bảo đảm toàn bộ ngữ cảnh request đã được mang sang script k6.
 :::
 
@@ -82,7 +82,7 @@ Kiểm tra **hợp đồng HTTP của script sinh ra**, nhất là `GET` so vớ
 
 `--staging-dir` lấy **functional gate** từ kết quả STAGING chỉ định hoặc gần nhất.
 
-:::warning Gate chức năng có thể bị bỏ qua
+:::warning[Gate chức năng có thể bị bỏ qua]
 Khi không tìm thấy summary, mã hiện cho phép chạy ở **chế độ phát triển**. Nếu yêu cầu bắt buộc chặn hiệu năng sau functional FAIL, phải chọn đúng `--staging-dir` — đừng xem hành vi mặc định là chính sách cưỡng chế.
 :::
 
@@ -100,7 +100,7 @@ Khi không tìm thấy summary, mã hiện cho phép chạy ở **chế độ ph
 
 **Luôn xem `violated_thresholds` và `overall_status`**, không chỉ exit code k6.
 
-:::note Cách tính percentile
+:::note[Cách tính percentile]
 Percentile tính từ mẫu NDJSON theo **nearest-rank**. Không lấy trung bình p95 của nhiều run để tạo "p95 toàn hệ thống".
 :::
 
@@ -126,7 +126,7 @@ Percentile tính từ mẫu NDJSON theo **nearest-rank**. Không lấy trung bì
 | Chạy lại cùng điều kiện | Cùng workload/dữ liệu/môi trường hoặc ghi rõ khác biệt |
 | Kết luận | So sánh trước/sau: chức năng, error rate, latency, throughput |
 
-:::danger REC không phải kết luận nguyên nhân gốc
+:::danger[REC không phải kết luận nguyên nhân gốc]
 Mã Agent 3 **không** tự sửa ứng dụng. Kết quả tốt ở một endpoint không đại diện toàn bộ hệ thống — phải ghi rõ phạm vi và điều kiện đo.
 :::
 

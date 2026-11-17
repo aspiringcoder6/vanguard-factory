@@ -7,7 +7,7 @@ sidebar_label: 3 · Cấu hình
 
 # Cấu hình hệ thống
 
-:::warning Đọc cấu hình khi khởi động
+:::warning[Đọc cấu hình khi khởi động]
 Broker đọc phần lớn biến môi trường **lúc import module**. Sửa biến rồi chạy lại lệnh trong cùng tiến trình sẽ **không** có tác dụng — phải khởi động lại Broker.
 :::
 
@@ -36,7 +36,7 @@ Broker đọc phần lớn biến môi trường **lúc import module**. Sửa b
 | `TESTFORGE_SANDBOX_IMAGE` | Tên image sandbox dùng khi chạy qua Sandbox-Kit; hiển thị trong `health` |
 | `TESTFORGE_SOURCE_REVISION` | Revision của bản build; **bắt buộc** khi `docker compose` vì dùng làm tag image |
 
-:::note `PROJECT_ROOT`
+:::note[`PROJECT_ROOT`]
 `PROJECT_ROOT` lấy từ vị trí file `testforge_broker.py`. Biến `TESTFORGE_PROJECT_ROOT` xuất hiện trong mô tả đầu file nhưng **không** được dùng để đổi thư mục gốc. Muốn đổi nơi chạy, đặt bản mã/volume ở vị trí phù hợp rồi kiểm tra `project_root` trong `health`.
 :::
 
@@ -56,7 +56,7 @@ $env:SUT_ADMIN_PASSWORD = [System.Net.NetworkCredential]::new(
 # $env:TESTFORGE_BROWSER_EXTRA_HEADERS = '<JSON da duyet>'
 ```
 
-:::warning Giá trị đặc biệt `ui`
+:::warning[Giá trị đặc biệt `ui`]
 Giá trị mật khẩu `ui` kích hoạt lối **đăng nhập nhanh** của một số hệ thống mẫu. Đây là tính năng phục vụ môi trường phát triển, **không** phải bộ thích nghi SSO tổng quát.
 :::
 
@@ -88,7 +88,7 @@ LOG_JSON=true
 
 Giới hạn quyền đọc file trên máy chủ.
 
-:::note Placeholder trong mẫu
+:::note[Placeholder trong mẫu]
 `<adapter-host>`, `<broker-host>` là **chỗ cần điền**, không phải giá trị chạy được. Thay bằng địa chỉ thật từ tài liệu bàn giao môi trường; không commit file chứa giá trị thật lên Git.
 :::
 

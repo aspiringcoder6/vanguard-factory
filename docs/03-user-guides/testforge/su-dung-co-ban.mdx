@@ -46,7 +46,7 @@ Năm trường **bắt buộc**:
 
 Lưu bằng UTF-8 tại `artifacts/inputs/FUNC-DEMO-LIST.json`.
 
-:::tip Oracle phải "đo được"
+:::tip[Oracle phải "đo được"]
 Với thao tác thêm mới, `expected_result` cần chỉ rõ **dấu hiệu thành công** và **dữ liệu được lưu/đọc lại**. Mỗi lỗi validation cần một testcase riêng với dữ liệu và thông báo mong đợi cụ thể — không dùng một bước "nhập hợp lệ" cho mọi tổ hợp.
 :::
 
@@ -83,7 +83,7 @@ $py = '.\.venv\Scripts\python.exe'
 | `--total-deadline-ms` | Mặc định 600.000 |
 | `--hitl` | Bật human-in-the-loop khi luồng cần người xác nhận |
 
-:::warning Không nới deadline để che lỗi
+:::warning[Không nới deadline để che lỗi]
 Tăng timeout chỉ hợp lệ khi có bằng chứng ứng dụng cần chờ. Dùng nó để "cho qua" locator hoặc oracle sai là làm hỏng chính bài test.
 :::
 
@@ -100,7 +100,7 @@ Tăng timeout chỉ hợp lệ khi có bằng chứng ứng dụng cần chờ. 
 
 Nếu `PARTIAL` hoặc `FAILED`, mở **đúng bước và lỗi** trước khi replay.
 
-:::note GROUNDED là gì?
+:::note[GROUNDED là gì?]
 `GROUNDED` cho biết bước đã được liên kết với thao tác/đối chiếu thật trên UI. Chỉ số này phải đọc **cùng oracle và gate** — ảnh một form đã điền **không** phải bằng chứng dữ liệu đã được lưu.
 :::
 
@@ -129,7 +129,7 @@ Replay tạo **trạng thái đăng nhập mới** và tổng hợp script từ 
 | `APPLICATION_DEFECT` | Lỗi ứng dụng | **Dừng tự sửa**; lập defect với bước tái hiện + evidence |
 | `ERROR` / discovery lỗi | Runtime, dependency, cấu hình chưa sẵn sàng | Xử lý môi trường trước khi đánh giá nghiệp vụ |
 
-:::danger Không hạ assertion để tăng tỷ lệ đạt
+:::danger[Không hạ assertion để tăng tỷ lệ đạt]
 Không xóa check, không nới oracle, không đổi `expected_result` để test xanh. Nếu gate chặn, sửa **bài test hoặc ứng dụng**, không sửa **định nghĩa đúng**.
 :::
 

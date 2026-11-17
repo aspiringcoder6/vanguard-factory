@@ -9,7 +9,7 @@ sidebar_label: 2 · Cài đặt
 
 Có ba lối cài: **Windows (phát triển)**, **Linux trực tiếp (máy chủ)** và **Docker** ([trang riêng](./trien-khai-docker)). Trang này đi hai lối đầu.
 
-:::warning Hai bộ Playwright là hai chuyện khác nhau
+:::warning[Hai bộ Playwright là hai chuyện khác nhau]
 Playwright **Python** dùng cho `run_explorer.py` và đăng nhập; Playwright **Node** dùng cho replay TypeScript. Cài thư viện Python **không** bảo đảm replay chạy được. Khi đổi phiên bản package, phải cài lại Chromium bằng đúng công cụ.
 :::
 
@@ -26,7 +26,7 @@ Playwright **Python** dùng cho `run_explorer.py` và đăng nhập; Playwright 
 | Docker Compose | Chỉ cho lối container | `docker compose version` |
 | Cognee và LLM | Cần khi recall → compose; **không** bắt buộc khi dùng file đã duyệt | Gọi recall/compose riêng |
 
-:::note Về `requirements.lock.txt`
+:::note[Về `requirements.lock.txt`]
 File lock có trong image nhưng Dockerfile thực tế cài `requirements.txt`. **Không** coi lock là cơ chế pin đang được áp dụng.
 :::
 
@@ -111,7 +111,7 @@ Invoke-RestMethod "$broker/api/v1/health"
 
 `status=ok` là điều kiện Broker hoạt động. `agent_memory.reachable=true` **chỉ** chứng minh probe `/health` của Adapter trả 200 — chưa chứng minh dataset hay nội dung truy xuất đúng.
 
-:::warning Token không tự truyền giữa các cửa sổ
+:::warning[Token không tự truyền giữa các cửa sổ]
 Mật khẩu/token đặt ở cửa sổ 1 không sang cửa sổ 2. Đặt token phía client riêng, cùng giá trị với Broker. Không đưa **giá trị** mật khẩu vào `--password-env`; tham số đó chỉ nhận **tên biến**.
 :::
 
@@ -157,7 +157,7 @@ Dùng systemd hoặc trình quản lý tiến trình của đơn vị:
 - `EnvironmentFile` là file được cấp quyền đọc hạn chế.
 - Chính sách restart có kiểm soát.
 
-:::warning Một worker
+:::warning[Một worker]
 `JobManager` giữ trạng thái job trong bộ nhớ **một tiến trình**. Không chạy nhiều Uvicorn worker nếu vẫn cần đọc nhất quán trạng thái job.
 :::
 

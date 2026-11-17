@@ -19,7 +19,7 @@ Tạo suite/profile theo `schemas/staging_profile.schema.json`, `schemas/staging
 
 Kiểm tra trước khi chạy: tài khoản, đường dẫn spec, dữ liệu, preflight môi trường.
 
-:::warning File generated chỉ là bản nháp
+:::warning[File generated chỉ là bản nháp]
 Các file trong `opt/staging/generated` là đầu ra sinh hoặc bản nháp. Phải được **duyệt** trước khi dùng làm bộ hồi quy chính thức.
 :::
 
@@ -41,7 +41,7 @@ flowchart TD
 
 Mỗi cạnh đi từ **bên sử dụng → thành phần được sử dụng**. Ví dụ: chức năng → API, API → file xử lý, API → dữ liệu (reads/writes).
 
-:::note Điểm quan trọng về dữ liệu
+:::note[Điểm quan trọng về dữ liệu]
 Khi một **writer** thay đổi, hệ thống truy tới dữ liệu nó ghi rồi tìm các bên đọc/ghi liên quan — thay vì chỉ chọn test có tên giống nhau.
 :::
 
@@ -67,7 +67,7 @@ Khi một **writer** thay đổi, hệ thống truy tới dữ liệu nó ghi r�
 8. `case_sha256` = `src.impact.engine.digest(case)`; `approved_by` chỉ ghi **sau khi duyệt thật**.
 9. Đặt `baseline: true` cho bài bắt buộc: đăng nhập, quyền, dữ liệu chung.
 
-:::danger `observed` / `suggested` / `stale` không đủ để thu hẹp tự động
+:::danger[`observed` / `suggested` / `stale` không đủ để thu hẹp tự động]
 Hệ thống sẽ **mở rộng toàn bộ phạm vi** và yêu cầu review. Không dùng các trạng thái này để tự động bỏ test.
 :::
 
@@ -140,7 +140,7 @@ Runner **tái tính** toàn bộ kế hoạch từ đầu vào và kiểm tra bu
 
 Test được chọn giữ nguyên **thứ tự và nội dung**, gồm rules đã duyệt. Lệnh staging cũ không có cờ impact vẫn hoạt động như trước.
 
-:::warning `target_revision` là lời khai của caller
+:::warning[`target_revision` là lời khai của caller]
 Hiện chưa có bộ đọc build từ endpoint triển khai để xác thực độc lập. Khi tích hợp CI phải lấy từ **deployment metadata**, không nhập SHA bất kỳ để khớp kế hoạch.
 :::
 

@@ -17,7 +17,7 @@ TestForge gọi **Agent Memory API** do Cognee Adapter cung cấp:
 
 Broker phân giải **tên dataset → UUID** rồi gọi search. Response `fetch-testcase` trả `chunks`, `entities`, `related_chunks`.
 
-:::warning `fetch-testcase` không chạy test
+:::warning[`fetch-testcase` không chạy test]
 Endpoint này chỉ truy xuất ngữ cảnh. Nó **chưa** tạo hoặc chạy testcase.
 :::
 
@@ -72,7 +72,7 @@ Lấy đúng **tên chức năng** chưa đủ để kết luận ngữ cảnh �
 | Kết quả và validation | Có dấu hiệu lưu thành công, dữ liệu hiển thị lại, trường bắt buộc, trường hợp từ chối? | Oracle/validation chuyển được thành assertion |
 | Tính đầy đủ | Có bị cắt ngang ở bảng, thiếu trang, lẫn mục kế cận? | Phần cần truy vấn bổ sung hoặc duyệt tay |
 
-:::danger Không ghi PASS khi chỉ có kết quả tìm kiếm tương tự
+:::danger[Không ghi PASS khi chỉ có kết quả tìm kiếm tương tự]
 Trùng từ khóa không phải trùng nghiệp vụ. Bảng trên là **biên bản đối chiếu** cho từng chức năng.
 :::
 

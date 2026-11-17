@@ -29,7 +29,7 @@ docker compose exec broker python -c "import shutil; print(shutil.which('k6'))"
 | 401/403 tăng | Kiểm token/Origin/quyền; không ghi secret vào log phân tích |
 | Evidence link không mở | Kiểm base URL, đường dẫn tương đối, quyền đọc sau reverse proxy |
 
-:::note Metrics không phải dashboard chất lượng
+:::note[Metrics không phải dashboard chất lượng]
 `metrics` chỉ phản ánh tiến trình và dictionary job đang chạy. Nó **không** thay thế dashboard coverage hay chất lượng testcase.
 :::
 
@@ -39,7 +39,7 @@ Endpoint `health` và `metrics` hiện **không** gắn Bearer. Nếu mở ra m�
 
 Ngừng nhận yêu cầu từ client/proxy → chờ job hoàn tất → cập nhật.
 
-:::warning Không có cancel bền vững
+:::warning[Không có cancel bền vững]
 Broker hiện không có API cancel bền vững. Tránh kill tiến trình đang sửa dữ liệu thử nếu chưa xem tác động cleanup.
 :::
 
@@ -55,7 +55,7 @@ Broker hiện không có API cancel bền vững. Tránh kill tiến trình đan
 
 Tách cấu hình có bí mật khỏi gói báo cáo. `storage.state.json`, user pool, header và response có thể chứa dữ liệu nhạy cảm.
 
-:::tip Evidence API
+:::tip[Evidence API]
 Hỗ trợ token trong header hoặc query để mở media. **Ưu tiên header**; tránh đưa URL có token vào tài liệu.
 :::
 
@@ -104,7 +104,7 @@ Khi gửi sự cố, kèm: mốc thời gian, phiên bản, `request_id`/`job_id
 | Evidence 403/404 | Path vượt `artifacts`, file không tồn tại, sai môi trường | Dùng path tương đối đúng run; kiểm mount và evidence base URL |
 | Job timeout | Chờ browser, LLM hoặc batch quá dài | Xem log trước; chia batch hoặc sửa bước chờ. Trần hiện 1200 giây |
 
-:::danger Mốc "xử lý xong"
+:::danger[Mốc "xử lý xong"]
 Phải có **lượt chạy lại** hoặc phép kiểm chứng tương ứng. Giữ báo cáo lịch sử; lưu run mới với định danh mới. **Không sửa dữ liệu kết quả cũ** để phản ánh hành vi đã sửa.
 :::
 

@@ -40,13 +40,13 @@ Chỉ thêm `function_id` sau khi đã kiểm tra **từng file** tương ứng.
 
 CLI exit `0` **chỉ khi toàn bộ** chức năng promoted.
 
-:::danger `--reset-command` chạy lệnh shell
+:::danger[`--reset-command` chạy lệnh shell]
 `--reset-command` và `--reset-stdin-file` có khả năng thực thi lệnh. Chỉ dùng script reset dữ liệu thử **đã được rà soát**. Không bao giờ lấy lệnh từ nội dung tài liệu/LLM không tin cậy.
 :::
 
 Thực hiện từng chức năng trước khi mở rộng batch.
 
-:::note Khác biệt CLI và API
+:::note[Khác biệt CLI và API]
 `POST /orchestrate/functional` hiện **không** khai báo `source` như CLI. Muốn cưỡng chế nguồn Cognee, dùng CLI `--source cognee` hoặc compose riêng rồi đưa file đã duyệt vào luồng explore.
 :::
 
@@ -104,7 +104,7 @@ Có thể thay `input_json` bằng `input_inline` 5 trường. **Không gửi c�
 | `error` | Lỗi thực thi |
 | `log_path` | Đường dẫn log job |
 
-:::warning `completed` ≠ nghiệp vụ đạt
+:::warning[`completed` ≠ nghiệp vụ đạt]
 `completed` chỉ có nghĩa **subprocess exit 0**. Phải đọc `output.parsed`, `exit_code`, `error`, `log_path` để xác định kết quả thật.
 :::
 
