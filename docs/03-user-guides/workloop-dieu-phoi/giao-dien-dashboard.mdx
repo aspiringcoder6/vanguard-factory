@@ -1,7 +1,7 @@
 ---
 title: Giao diện dashboard
 description: Các tab của dashboard — Dashboard, Workloop, Runs, Duyệt, Factory, Agents, Webhook, Automation, Integration, Secret.
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 import DashboardTongQuan from '@site/static/img/workloop-dashboard-tong-quan.jpeg';
@@ -10,7 +10,10 @@ import DashboardDuyet from '@site/static/img/workloop-dashboard-duyet.jpeg';
 
 # Giao diện dashboard
 
-Dashboard là giao diện quản trị tập trung của tầng Workflow. Các tab chính:
+## Mục đích
+
+Dashboard là giao diện quản trị tập trung của tầng Workflow: theo dõi sức khỏe hệ thống, xem cấu
+trúc DAG, đọc report từng node và xử lý **card duyệt HITL**. Các tab chính:
 
 | Tab | Dùng để |
 |---|---|
@@ -70,3 +73,17 @@ Cơ chế bên dưới: [Cổng duyệt & HITL](/docs/architecture/tang-2-workfl
 
 Mở tab **Runs** sau một run: mọi node có trạng thái terminal; run có gate chờ duyệt xuất hiện ở
 tab **Duyệt** với đầy đủ ngữ cảnh để ra quyết định.
+
+## Lỗi thường gặp
+
+| Hiện tượng | Xử lý |
+|---|---|
+| Tab **Factory** trống | backend chưa sync factory repo — gọi `POST /api/v1/flows/sync` ([Cài đặt](/docs/user-guides/workloop-dieu-phoi/cai-dat)) |
+| Card duyệt biến mất | quá TTL 48h không ai trả lời bị swept thành từ chối — chạy lại với `resume` ([Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co)) |
+| Trả lời card báo 409 | gateway của run đã kết thúc — chạy lại với `resume` ([Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co)) |
+
+## Liên kết
+
+- Luồng duyệt chi tiết: [Cổng duyệt & HITL](/docs/architecture/tang-2-workflow/cong-duyet-hitl)
+- Đọc kết quả qua API/MCP: [Vòng 4 bước — quan sát](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc)
+- Giám sát & cảnh báo (admin): [Monitoring & cảnh báo](/docs/admin-operations/monitoring-canh-bao)

@@ -1,14 +1,22 @@
 ---
 title: Gọi tool MCP — ví dụ nhanh
 description: Năm tool hay dùng nhất cho agent orchestrator + ví dụ câu lệnh; bảng đầy đủ ở mục 06.
-sidebar_position: 3
+sidebar_position: 4
 sidebar_label: Gọi tool MCP (nhanh)
 ---
 
 # Gọi tool MCP — ví dụ nhanh
 
-Trang này chỉ chứa **cách dùng hàng ngày**. Bảng tra đầy đủ (tham số, trả về) nằm ở
+## Mục đích
+
+Giao việc cho Workloop bằng ngôn ngữ tự nhiên qua agent orchestrator. Trang này chỉ chứa **cách dùng
+hàng ngày** của MCP `workloop-factory`; bảng tra đầy đủ (tham số, trả về) nằm ở
 [MCP Tools Reference](/docs/reference/mcp-tools) — theo quy tắc "một chỗ duy nhất".
+
+## Điều kiện trước
+
+- MCP server `workloop-factory` đã cắm cho orchestrator với `WORKLOOP_URL` + `WORKLOOP_TOKEN` +
+  `FACTORY_REPO_URL`/`FACTORY_PATH` — [Cài đặt, bước 4](/docs/user-guides/workloop-dieu-phoi/cai-dat#bước-4-cắm-mcp-cho-agent-orchestrator).
 
 ## Năm tool hay dùng nhất
 
@@ -46,3 +54,17 @@ Agent orchestrator sẽ gọi chuỗi tool và trả về `job_id` — bạn the
 
 Câu lệnh trên hoàn tất mà không lỗi; `get_run(job_id)` cho node ở trạng thái terminal
 (`DONE`) và `get_report(job_id)` có tin nhắn cuối của agent.
+
+## Lỗi thường gặp
+
+| Hiện tượng | Xử lý |
+|---|---|
+| Tool báo lỗi kết nối backend | kiểm tra `WORKLOOP_URL` + `WORKLOOP_TOKEN` trong cấu hình MCP |
+| `configure_workflow` trả lỗi validate | spec sai — sửa theo thông báo lỗi (validate fail-loud, chưa ghi gì vào factory repo); cú pháp: [Spec DSL](/docs/reference/spec-dsl) |
+| Gọi `call_agent` nhưng việc không chạy như kỳ vọng | đúng cơ chế — worker thật chỉ chạy qua workflow; đi [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc) |
+
+## Liên kết
+
+- Bảng tool đầy đủ: [MCP Tools Reference](/docs/reference/mcp-tools)
+- Chu trình đầy đủ: [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc)
+- Đăng ký MCP server: [Cài đặt, bước 4](/docs/user-guides/workloop-dieu-phoi/cai-dat#bước-4-cắm-mcp-cho-agent-orchestrator)
