@@ -6,18 +6,6 @@ sidebar_position: 5
 
 # Xử cố thường gặp
 
-:::note Thông tin trang
-
-| | |
-|---|---|
-| **Hệ thống** | Workloop — điều phối |
-| **Người phụ trách** | *đang cập nhật* |
-| **Trạng thái tài liệu** | 🟢 Published |
-| **Trạng thái hệ thống** | ✅ Đã triển khai |
-| **Cập nhật** | 2026-11-13 |
-
-:::
-
 ## 401 hàng loạt — token DSH đổi sau restart
 
 **Triệu chứng:** mọi thao tác qua harness trả 401 sau khi DSH khởi động lại.
@@ -28,14 +16,35 @@ này — backend đang chạy sẽ lỗi hàng loạt.
 ## Stall → re-arm
 
 **Triệu chứng:** node đứng lâu không có tiến triển.
-**Cơ chế:** vòng điều khiển phát hiện stall → re-arm phiên mới (không mang hội thoại cũ, mang lỗi
-gần nhất) — tối đa `max_rearms` lần; hết lượt → node `REARM_EXHAUSTED`.
+**Cơ chế:** vòng điều khiển phát hiện stall → re-arm **tái sử dụng session cũ** (giữ nguyên context,
+không đọc lại brief từ đầu) — tối đa `max_rearms` lần; vượt token budget → `BUDGET_EXCEEDED`; hết
+lượt → node `REARM_EXHAUSTED`.
 **Xử lý:** xem report node để biết lý do thiếu tiến triển; tăng ngân sách hoặc sửa brief rồi chạy
-node lại. Chi tiết cơ chế: [SDK & Gateway](/docs/developer-docs/sdk-gateway).
+node lại. Chi tiết cơ chế: [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi) ·
+[SDK & Gateway](/docs/developer-docs/sdk-gateway).
+
+## Node NEEDS_CONTEXT / DONE_WITH_CONCERNS
+
+**Triệu chứng:** node kết thúc ở `NEEDS_CONTEXT` (thiếu thông tin) hoặc `DONE_WITH_CONCERNS`
+(xong nhưng có lưu ý).
+**Ý nghĩa:** đây là trạng thái terminal của contract — run **không tự vòng lại**; việc xử lý là
+quyết định cấp workflow.
+**Xử lý:** `NEEDS_CONTEXT` — bổ sung brief/context rồi chạy lại với `resume` (node khác không
+chạy lại); `DONE_WITH_CONCERNS` — đọc concerns trong report, node có cờ gate thì bắt buộc xử lý
+tới `DONE` mới qua cổng. Chi tiết: [State machine vòng đời](/docs/architecture/tang-2-workflow/state-machine).
+
+## Card duyệt treo / không ai trả lời
+
+**Triệu chứng:** run dừng chờ duyệt quá lâu.
+**Cơ chế:** approval có TTL 48h — quá hạn bị swept thành rejected; backend không tự trả lời thay
+người.
+**Xử lý:** trả lời card ở tab **Duyệt** hoặc gọi
+`POST /api/v1/monitor/jobs/{id}/approvals/{event_id}/answer`; nếu gateway của run đã kết thúc
+(409) thì chạy lại với `resume`.
 
 ## Pause / resume
 
-- `pause_run(job_id)` — dừng run **ở ranh giới wave**; node đang chạy hoàn tất tới checkpoint.
+- `pause_run(job_id)` — dừng run **ở ranh giới giữa các bước**; node đang chạy hoàn tất tới checkpoint.
 - `resume_run(job_id)` — chạy tiếp từ checkpoint; **node đã xong không chạy lại**.
 - Nguyên tắc khôi phục: [Phục hồi gián đoạn](/docs/architecture/kiem-chung-phuc-hoi/phuc-hoi-gian-doan).
 
@@ -48,6 +57,8 @@ node lại. Chi tiết cơ chế: [SDK & Gateway](/docs/developer-docs/sdk-gatew
 | run kẹt `in_progress` | DSH chết hoặc token hết hạn | xem log backend; sửa env rồi restart backend |
 | workflow 404 khi run | chưa sync sau khi push spec | gọi `POST /api/v1/flows/sync` |
 | session không nằm trong workspace | harness thiếu workspace id | kiểm tra biến env workspace đã export |
+| node `BUDGET_EXCEEDED` | vượt token budget của task | tăng `token_budget` hoặc tối ưu brief |
+| run kẹt `suspended` | PAUSE/duyệt chưa được xử lý | `resume_run` hoặc trả lời card duyệt |
 
 Runbook mở rộng cho admin: [Runbook sự cố](/docs/admin-operations/runbook-su-co).
 

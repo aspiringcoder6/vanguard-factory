@@ -1,0 +1,105 @@
+---
+title: State machine vòng đời
+description: 6 trạng thái contract taskloop, trạng thái job, ai ghi trạng thái và quy tắc fail-closed.
+sidebar_position: 2
+---
+
+# State machine vòng đời task
+
+Tầng 2 quản lý trạng thái ở **hai cấp**: trạng thái *node* (hợp đồng taskloop trên harness) và
+trạng thái *job* (run trên backend). Hai cấp này độc lập — node chết không làm job chết.
+
+## Trạng thái node — contract là nguồn sự thật
+
+Mỗi node khi được giao việc có một **contract** định danh `<workflow>--<node>--<run>` trên harness
+(tầng 3). Bộ 6 trạng thái chuẩn là **hợp đồng đóng băng** — harness nào (DSH, OpenCode…) cũng phải
+map trạng thái native về đây; engine không hiểu gì khác ngoài 6 trạng thái này:
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: contract tạo mới
+    PENDING --> IN_PROGRESS: nhận việc (prompt đã bắn)
+    IN_PROGRESS --> DONE: xong + kiểm chứng đạt
+    IN_PROGRESS --> DONE_WITH_CONCERNS: xong nhưng có lưu ý
+    IN_PROGRESS --> BLOCKED: gate từ chối / lỗi không phục hồi
+    IN_PROGRESS --> NEEDS_CONTEXT: thiếu thông tin — dừng chờ người
+    DONE --> [*]
+    DONE_WITH_CONCERNS --> [*]
+    BLOCKED --> [*]
+    NEEDS_CONTEXT --> [*]
+```
+
+| Trạng thái | Terminal? | Ý nghĩa |
+|---|---|---|
+| `PENDING` | — | Contract đã có, chưa nhận việc |
+| `IN_PROGRESS` | — | Agent đang thực thi (chịu giám sát stall → re-arm) |
+| `DONE` | ✅ | Xong, đạt — trạng thái duy nhất **gate chấp nhận** |
+| `DONE_WITH_CONCERNS` | ✅ | Xong nhưng có lưu ý — node thường cho qua, **gate chặn** |
+| `BLOCKED` | ✅ | Không tiếp tục được — leo thang người vận hành |
+| `NEEDS_CONTEXT` | ✅ | Thiếu thông tin — tách escalation khỏi logic run |
+
+Ngoài bộ chuẩn, engine còn dùng hai trạng thái **cấp gateway/engine** (không thuộc contract agent):
+
+- `CANCELLED` — gateway hủy phiên (STOP, dọn dẹp khi job chết).
+- `SKIPPED` — engine bỏ node theo điều kiện (nhánh Condition không đi, join policy gạt nhánh
+  upstream đã skip, review không đạt sau trần vòng). Ghi kèm `why` vào event.
+
+:::note[Terminal ≠ kết thúc xử lý nghiệp vụ]
+`DONE_WITH_CONCERNS`, `BLOCKED`, `NEEDS_CONTEXT` là **terminal của contract** — agent dừng, engine
+không tự vòng lại. Việc xử lý tiếp (bổ sung brief, cung cấp ngữ cảnh, chạy lại) là **quyết định
+cấp workflow**: sửa spec rồi `fresh=true`, hoặc chạy lại với `resume` — xem
+[Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi).
+:::
+
+## Ai ghi trạng thái — và sao tin được
+
+1. **Agent tự cập nhật contract** theo quy trình taskloop: `IN_PROGRESS` khi bắt đầu, terminal
+   status **trước khi** gửi report (quy tắc "set final status BEFORE sending this report" nằm ngay
+   trong template prompt). Sau khi set terminal, agent không được sửa report nữa (chống late-write
+   race với reviewer).
+2. **Engine kiểm chéo, không tin mù**: node kết thúc mà contract chưa terminal → engine chờ 1 nhịp
+   (30s), đọc lại contract; vẫn không terminal → coi là `DONE_WITH_CONCERNS` + event
+   `node_status_unclear`. Không bao giờ âm thầm coi là `DONE`.
+3. **Engine quyết định qua/ko qua**: gate chỉ nhận `DONE`; `DONE_WITH_CONCERNS` lọt tới gate bị
+   chặn — tránh "xong ẩu" qua cổng duyệt.
+
+## Trạng thái job — vòng đời một run
+
+| Trạng thái | Bật bởi | Ý nghĩa |
+|---|---|---|
+| `queued` | `POST /flows/{name}/run` | Job đã tạo trong DB, runner chưa nhặt |
+| `in_progress` | runner | DAG đang chạy theo wave |
+| `completed` | kết thúc sạch | Mọi node đã terminal; `result` = tổng hợp status + attempts từng node |
+| `suspended` | signal `PAUSE` | Dừng có **checkpoint** — `resume_run` tiếp tục được |
+| `cancelled` | signal `STOP` / hủy | Dừng hẳn |
+| `failed` | exception tầng DAG | Lỗi engine/gateway — xem `error` + event `job_failed` |
+
+## Event trail — nguồn cho timeline và audit
+
+Backend ghi **event log chỉ append** vào bảng `job_events` (mỗi job một dãy `seq`). Chuỗi sự kiện
+chuẩn của một run:
+
+```
+job_created → run_context → run_start → node_started → node_terminal
+           → node_done (status + attempts + errors taxonomy) → job_completed
+```
+
+Các event khác: `approval_requested` / `approval_answered` (HITL, có `by` audit),
+`node_review_pending/rejected/done/exhausted` (vòng review), `skill_injected` /
+`artifact_injected` (bằng chứng node nhận đủ ngữ cảnh), `job_paused` / `run_resumed` /
+`job_resumed` (phục hồi), `node_started`/`node_terminal` ghi theo **thời điểm thật** — là nguồn
+span cho Gantt timeline và trace Phoenix.
+
+Hai đường sự kiện, không trộn:
+
+| Đường | Nơi sống | Dùng cho |
+|---|---|---|
+| `job_events` (SQLite) | DB backend — trail đầy đủ | `get_run`, timeline Gantt, audit |
+| Event bus (SSE) | `/api/v1/events/stream/{run_id}` — replay + live theo `seq`, type theo hợp đồng đóng băng (`run.started`, `gate.waiting`…) | Dashboard/FE thời gian thực |
+
+## Liên kết
+
+- Bảng trạng thái tra cứu nhanh: [Trạng thái & State machine](/docs/reference/trang-thai)
+- Trạng thái đọc từ đâu: [MCP Tools](/docs/reference/mcp-tools) (`get_run`, `get_report`) ·
+  [API REST](/docs/reference/api-rest)
+- Khi trạng thái dừng giữa chừng: [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi)

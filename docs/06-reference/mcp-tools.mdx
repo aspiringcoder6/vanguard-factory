@@ -11,34 +11,44 @@ Ví dụ sử dụng nhanh: [Gọi tool MCP](/docs/user-guides/workloop-dieu-pho
 
 ## Workflow & runs
 
-| Tool | Tham số chính | Trả về |
+| Tool | Tham số chính | Trả về / ý nghĩa |
 |---|---|---|
-| `configure_workflow` | `name`, `spec` (YAML), `agents?` | xác nhận cấu hình |
-| `list_workflows` | — | danh sách workflow |
-| `get_workflow` | `name` | chi tiết workflow |
-| `run_workflow` | `name`, `fresh?` | `job_id` |
-| `get_run` | `job_id` | trạng thái từng node |
+| `configure_workflow` | `name`, `spec` (YAML Kestra-style), `agents?` (`{filename: nội dung}`) | ghi factory repo + commit/push + sync vào DB; trả **`version` + `sha`** |
+| `list_workflows` | — | workflow đã đăng ký (tên, version, sha) |
+| `get_workflow` | `name` | chi tiết flow JSON (nodes + vị trí) |
+| `run_workflow` | `name`, `fresh?` | `job_id` — chạy nền; `fresh=true` reset contract về `PENDING` (chạy lại sạch, không adopt kết quả cũ) |
+| `get_run` | `job_id` | trạng thái từng node + events (lỗi có taxonomy) |
 | `list_runs` | — | các run gần đây |
-| `get_report` | `job_id` | kết quả + tin nhắn cuối từng node |
-| `pause_run` | `job_id`, `action?` | dừng ở ranh giới wave |
-| `resume_run` | `job_id` | chạy tiếp từ checkpoint |
+| `get_report` | `job_id` | sản phẩm từng node: status + session + tin nhắn cuối của agent (Status/commits/test/concerns) |
+| `pause_run` | `job_id`, `action?` (`PAUSE` \| `STOP`) | PAUSE — dừng ở ranh giới wave, resume được; STOP — kết thúc; trả `signal_id` + `consumed` |
+| `resume_run` | `job_id` | chạy tiếp run **suspended (sau PAUSE)** từ checkpoint — node đã xong không chạy lại |
 
 ## Gọi agent
 
-| Tool | Tham số chính | Trả về |
+| Tool | Tham số chính | Trả về / ý nghĩa |
 |---|---|---|
-| `call_agent` | `name` (role), `task`, `context?`, `doc_type?` | `invocation_id` (bất đồng bộ) |
-| `call_agent_status` | `invocation_id` | trạng thái invocation |
+| `call_agent` | `name` (agent tĩnh), `task`, `context?`, `doc_type?`, `lifecycle_id?`, `channel?`, `thread_ts?`, `user?`, `title?` | `invocation_id` — **bất đồng bộ**, poll bằng `call_agent_status` |
+| `call_agent_status` | `invocation_id` | `running` \| `done` (kết quả có link Confluence + output) \| `failed` |
+
+`call_agent` gọi **agent tĩnh theo danh sách cứng** — không phải role worker tuỳ ý:
+
+- `name='spec'` (duy nhất hữu dụng): soạn tài liệu thiết kế — **bắt buộc `doc_type`** một trong
+  `ptyc` (phân tích yêu cầu) · `tkct` (thiết kế chi tiết) · `tkcsdl` (thiết kế CSDL). Agent tự
+  search chống trùng → tạo/cập nhật trang Confluence → kết quả có LINK (tự ghi vào DB lifecycle
+  để UI duyệt).
+- Worker (coder, reviewer…) **không gọi trực tiếp được** — chạy qua workflow theo `role` trong
+  spec: [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc).
+- `name='orchestrator'` bị chặn — orchestrator là caller.
 
 ## PR & Confluence
 
-| Tool | Tham số chính | Trả về |
+| Tool | Tham số chính | Trả về / ý nghĩa |
 |---|---|---|
-| `record_pr` | `lifecycle_id`, `repo`, `branch`, `pr_url`, `pr_number?`, `node?`, `job_id?`, `review_status?` | ghi nhận PR vào vòng đời |
-| `confluence_search` | `cql`, `limit?` | danh sách trang |
-| `confluence_get_page` | `page_id` | nội dung trang |
-| `confluence_create_page` | `space`, `title`, `body_markdown` | trang mới |
-| `confluence_update_page` | `page_id`, `body_markdown`, `title?` | cập nhật (tự tăng version) |
+| `record_pr` | `lifecycle_id`, `repo`, `branch`, `pr_url`, `pr_number?`, `node?`, `job_id?`, `review_status?` | ghi nhận PR vào vòng đời — implement agent gọi **ngay sau khi tạo PR** để UI track (spec → PR → test → deploy); `pr_number=0` nếu chưa biết |
+| `confluence_search` | `cql`, `limit?` | tìm trang theo CQL — search trước khi tạo mới để tránh trùng tiêu đề |
+| `confluence_get_page` | `page_id` | đọc lại trang: title, version, body, link |
+| `confluence_create_page` | `space`, `title`, `body_markdown` | tạo trang mới từ Markdown (chuyển wiki markup); trả `{id, version, LINK}` |
+| `confluence_update_page` | `page_id`, `body_markdown`, `title?` | **thay thế toàn bộ** nội dung (không ghép), tự tăng version; title rỗng → giữ tiêu đề cũ |
 
 ## Cấu hình MCP server
 

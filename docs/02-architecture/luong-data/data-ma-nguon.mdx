@@ -6,24 +6,14 @@ sidebar_position: 1
 
 # Data Flow — mã nguồn đi qua đâu (2.6a)
 
-> Sơ đồ gốc nằm trong các slide — xuất hình vào `static/img/02-architecture/` khi có.
-
 ## Dòng chính: Git → VFS → Sandbox
 
-```
-GITEA (source of truth)
-   │  git clone (lần chạy)
-   ▼
-VFS (tệp ảo dùng chung — giữ tệp hiện tại + nhánh + HEAD, không giữ thư mục .git)
-   │  đồng bộ tệp thay đổi vào phiên
-   ▼
-SANDBOX (môi trường cô lập — agent đọc/ghi tệp ở đây)
-   │  agent chỉnh sửa
-   ▼
-dựng cây + commit trong vùng tạm (isomorphic-git)
-   │  git push
-   ▼
-NHÁNH AGENT trên Gitea ──▶ PR ──▶ người duyệt merge
+```mermaid
+flowchart TD
+    G["GITEA — source of truth"] -->|"git clone (lần chạy)"| V["VFS — tệp ảo dùng chung<br/>tệp hiện tại + nhánh + HEAD (không giữ .git)"]
+    V -->|"đồng bộ tệp thay đổi vào phiên"| S["SANDBOX — môi trường cô lập<br/>agent đọc/ghi tệp"]
+    S -->|"dựng cây + commit trong vùng tạm<br/>(isomorphic-git)"| P["git push → nhánh agent trên Gitea"]
+    P --> PR["PR → người duyệt merge"]
 ```
 
 Nguyên tắc (theo [Contract Git](/docs/architecture/giao-tiep#contract-git)): **1 agent — 1

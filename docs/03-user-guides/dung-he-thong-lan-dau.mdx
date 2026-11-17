@@ -1,46 +1,239 @@
 ---
 title: Dùng hệ thống lần đầu
-description: Quickstart — bật đủ các phần, chạy ticket đầu tiên.
+description: Hướng dẫn cài đặt và chạy workflow đầu tiên cho người mới — từ số 0 tới run hoàn tất, quan sát và duyệt.
 sidebar_position: 1
 ---
 
 # Dùng hệ thống lần đầu
 
-Mục tiêu: từ số 0 tới **run workflow đầu tiên** trên một máy. Đây là bản tóm tắt — hướng dẫn chi
-tiết từng bước nằm ở [HDSD Workloop điều phối](/docs/user-guides/workloop-dieu-phoi/cai-dat).
+Trang này dành cho **người mới bắt đầu**: cài đặt hệ thống trên một máy rồi chạy workflow đầu
+tiên từ số 0. Gồm hai phần:
+
+- **Phần A — Cài đặt**: chuẩn bị môi trường, cài repo workloop, khởi động backend, nối agent
+  orchestrator (4 bước).
+- **Phần B — Sử dụng lần đầu**: nạp workflow từ factory repo, chạy smoke test, quan sát và duyệt
+  kết quả (3 bước).
+
+Mỗi bước đều ghi rõ **lệnh chạy** và **kết quả đúng phải thấy**. Nguyên lý chi tiết của từng cơ
+chế nằm ở các trang chuyên sâu — liên kết ở cuối mỗi mục.
 
 ## Điều kiện cần
 
-- Python 3.11 + git + `pip`.
-- **Harness (DSH)** đang chạy và có plugin taskloop (địa chỉ + token cấp qua biến môi trường
-  `DSH_TOKEN` — giá trị không bao giờ ghi vào repo/docs).
-- **Gitea nội bộ**: một factory repo (branch `main`) — nơi lưu spec + agents.
-
-## Sáu bước tóm tắt
-
-| # | Bước | Tóm tắt | Chi tiết |
-|---|---|---|---|
-| 1 | Cài repo workloop | `pip install -e .` | [Cài đặt](/docs/user-guides/workloop-dieu-phoi/cai-dat) |
-| 2 | Tạo script chạy backend | file `run_backend.sh` — sửa các giá trị env in hoa | [Cài đặt — bước 2](/docs/user-guides/workloop-dieu-phoi/cai-dat#bước-2-tạo-script-chạy-backend) |
-| 3 | Khởi động + kiểm sống | `curl :8100/api/health` | [Cài đặt — bước 3](/docs/user-guides/workloop-dieu-phoi/cai-dat#bước-3-khởi-động-và-kiểm-sống) |
-| 4 | Cắm MCP cho agent orchestrator | đăng ký server MCP `workloop-factory` | [HDSD Agent orchestrator](/docs/user-guides/opencode-orchestrator/gioi-thieu) |
-| 5 | Smoke test | workflow 1 node qua MCP | [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc) |
-| 6 | Ghi nhớ cảnh báo token DSH | DSH đổi token sau restart | [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co) |
-
-## Kết quả đúng phải thấy
+Kiểm tra trước khi bắt đầu:
 
 ```bash
-curl http://127.0.0.1:8100/api/health
+python3.11 --version   # Python 3.11
+git --version          # git
+pip --version          # pip
+curl --version         # curl — dùng để kiểm sống và gọi API
 ```
 
-Trả về `{"ok":true,...}` và sau khi sync:
+Ngoài công cụ trên máy, cần có:
+
+| Thành phần | Yêu cầu | Ghi chú |
+|---|---|---|
+| **Harness (DSH)** | Đang chạy, có plugin taskloop | Địa chỉ + token cấp qua biến môi trường `DSH_TOKEN` |
+| **Gitea nội bộ** | Một factory repo (branch `main`) | Nơi lưu spec workflow + agents — nguồn sự thật |
+| **Secret** | Token lấy từ vault / trình quản lý secret | **Không bao giờ ghi token vào bất kỳ file nào trong repo/docs** |
+
+:::tip[Ai cài DSH, Gitea giúp tôi?]
+DSH (harness) và Gitea thường do admin môi trường dựng sẵn. Bạn chỉ cần **xin 3 thứ**: URL factory
+repo (kèm quyền đọc/ghi), token DSH, và token harness/workspace. Nếu phải tự dựng, xem
+[Tầng 3 · Harness](/docs/architecture/tang-3-harness/tong-quan-harness) và
+[Tầng 4 · Sandbox](/docs/architecture/tang-4-sandbox/tong-quan).
+:::
+
+## Phần A — Cài đặt
+
+### Bước 1: Cài repo workloop
+
+Clone repo workloop (repo backend điều phối — khác với factory repo ở trên) và cài vào môi trường
+Python:
+
+```bash
+git clone <url-repo-workloop-noi-bo> workloop-repo
+cd workloop-repo
+pip install -e .
+```
+
+Cờ `-e` (editable) giúp sửa mã không phải cài lại. **Kết quả đúng phải thấy:** `pip` cài xong
+không lỗi, lệnh `python3 -c "import workloop"` không báo `ModuleNotFoundError`.
+
+### Bước 2: Tạo script chạy backend
+
+Tạo file `run_backend.sh` **ở thư mục ngoài repo** (để env không bị commit nhầm). Chỉnh các giá trị
+in hoa trước khi dùng — mọi token lấy từ vault/trình quản lý secret của bạn:
+
+```bash
+#!/bin/bash
+export WORKLOOP_TOKEN=<token-backend-dung-de-chan-API>
+export WORKLOOP_DB=/duong/dan/data/workloop.db
+export WORKLOOP_SRC=/duong/dan/src
+export FACTORY_REPO_URL=<url-factory-repo-voi-cred-tu-vault>
+export FACTORY_REPO_BRANCH=main
+export FACTORY_PATH=/duong/dan/factory-checkout
+export DSH_TOKEN=<token-harness-DSH>
+export LANGFLOW_DATABASE_URL=sqlite:////duong/dan/wl-lfx.db
+export PYTHONPATH=<thu-muc-src>:<thu-muc-src>/workloop/engine
+cd <thu-muc-src>/workloop/backend
+exec python3 -m uvicorn main:app --host 0.0.0.0 --port 8100 >> /duong/dan/backend.log 2>&1
+```
+
+Các biến này làm gì:
+
+| Env | Ý nghĩa |
+|---|---|
+| `WORKLOOP_TOKEN` | backend dùng để chặn API của chính nó — mọi curl gọi API phải gửi token này |
+| `WORKLOOP_DB` | file SQLite — lưu jobs, events, index workflows |
+| `WORKLOOP_SRC` | thư mục mã nguồn workloop |
+| `FACTORY_REPO_URL` | repo nguồn sự thật (spec + agents) |
+| `FACTORY_REPO_BRANCH` | branch nguồn sự thật — mặc định `main` |
+| `FACTORY_PATH` | checkout cục bộ của backend tới factory repo |
+| `DSH_TOKEN` | token điều khiển harness (DSH) |
+| `LANGFLOW_DATABASE_URL` | bắt buộc — tránh crash engine vendored |
+
+Bảng đầy đủ: [Env vars](/docs/reference/env-vars).
+
+### Bước 3: Khởi động và kiểm sống
+
+```bash
+chmod +x run_backend.sh
+setsid nohup bash run_backend.sh </dev/null >/dev/null 2>&1 &
+sleep 20 && curl http://127.0.0.1:8100/api/health
+```
+
+- `setsid nohup ... &` — chạy nền, backend sống sót khi bạn đóng terminal.
+- `sleep 20` — đợi backend lên; lần đầu có thể chậm hơn một chút.
+- `curl .../api/health` — kiểm sống. **Kết quả đúng phải thấy:** `{"ok":true,...}`.
+
+Health không trả `ok`? Xem log để tìm nguyên nhân:
+
+```bash
+tail -f /duong/dan/backend.log
+```
+
+### Bước 4: Cắm MCP cho agent orchestrator
+
+Trong cấu hình của agent orchestrator (OpenCode), đăng ký MCP server `workloop-factory`:
+
+- **Kiểu**: stdio
+- **Lệnh**: trỏ tới `src/workloop/backend/mcp_server.py`
+- **Env**: `FACTORY_REPO_URL` + `FACTORY_PATH` + `WORKLOOP_TOKEN` + URL backend
+  (`http://127.0.0.1:8100`)
+
+Xong bước này bạn có thể **giao việc bằng ngôn ngữ tự nhiên** — orchestrator gọi các tool MCP
+(`configure_workflow`, `run_workflow`, `get_run`, `get_report`…) thay cho bạn. Hướng dẫn riêng:
+[HDSD Agent orchestrator](/docs/user-guides/opencode-orchestrator/gioi-thieu).
+
+:::note[Không dùng agent orchestrator?]
+Vẫn làm được mọi bước bằng REST API hoặc dashboard — Phần B dưới đây ghi kèm lệnh curl tương
+ứng. Bảng tool/API: [MCP Tools](/docs/reference/mcp-tools) · [API REST](/docs/reference/api-rest).
+:::
+
+## Phần B — Sử dụng lần đầu
+
+### Bước 5: Nạp workflow từ factory repo (sync)
+
+Backend đọc spec + agents từ factory repo. Sau khi repo có thay đổi (hoặc lần đầu), gọi sync:
+
+```bash
+curl -X POST http://127.0.0.1:8100/api/v1/flows/sync \
+  -H "Authorization: Bearer $WORKLOOP_TOKEN"
+```
+
+**Kết quả đúng phải thấy:**
 
 ```json
 {"sha":"<sha-cua-lan-sync>","workflows":[{"name":"<ten-workflow>"}]}
 ```
 
+Mọi thay đổi spec đi qua Git — `sha` cho phép truy ngược đúng phiên bản đã chạy.
+
+### Bước 6: Chạy workflow đầu tiên (smoke test)
+
+Làm quen bằng workflow 1 node. Nếu đã cắm MCP (bước 4), giao việc bằng **một câu**:
+
+```text
+Dùng MCP workloop-factory: configure_workflow tạo workflow 'hello2' với 1 node hello
+(type WorkloopTask, role coder, brief: viết reports/hello.md 1 dòng 'hello world').
+Sau đó run_workflow('hello2', fresh=true) và in job_id.
+```
+
+Hoặc nếu workflow đã có sẵn trong factory repo, chạy trực tiếp qua REST:
+
+```bash
+curl -X POST http://127.0.0.1:8100/api/v1/flows/hello2/run \
+  -H "Authorization: Bearer $WORKLOOP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"fresh": true}'
+```
+
+Hệ thống trả **`job_id`** (+ `wf_version`, `sha`) — dùng job_id này cho mọi bước sau. Run chạy
+**nền**. `fresh=true` = chạy sạch, không tái sử dụng kết quả cũ.
+
+### Bước 7: Quan sát tiến độ và đọc kết quả
+
+Theo dõi run tới khi xong:
+
+```bash
+# Xem trạng thái run (poll tới "completed")
+curl http://127.0.0.1:8100/api/v1/monitor/jobs/<job_id> \
+  -H "Authorization: Bearer $WORKLOOP_TOKEN"
+```
+
+Qua MCP thì thay bằng `get_run(job_id)` (trạng thái + events) và `get_report(job_id)` (sản phẩm
+từng node: status, số attempts, session id, **tin nhắn cuối của agent**). Trên dashboard: tab
+**Runs** — chi tiết job kèm timeline Gantt; tiến độ thời gian thực qua SSE
+`GET /api/v1/events/stream/{job_id}`.
+
+**Kết quả đúng phải thấy:**
+
+- `get_run` → `completed`; `get_report` cho thấy node ở trạng thái terminal kèm tin nhắn cuối
+  của agent (report theo format Status/commits/test/concerns).
+- Trên Gitea có PR từ nhánh agent — **chưa được merge** cho tới khi người duyệt gộp.
+- `git log` factory repo có commit `configure_workflow: hello2`.
+
+### Bước 8: Duyệt khi run dừng chờ (HITL)
+
+Nếu spec khai `need_review: human` (hoặc reviewer/kỳ vọng hỏi người), run dừng ở đúng điểm đó và
+**card duyệt** xuất hiện:
+
+- Tab **Duyệt** trên dashboard — đọc brief, report, bằng chứng kèm theo; tiêu chí review nằm trên
+  card. Chấp nhận/từ chối **kèm lý do**.
+- Qua REST: `POST /api/v1/monitor/jobs/{id}/approvals/{event_id}/answer`.
+- Card treo quá 48h không ai trả lời bị dọn (từ chối) — không treo vĩnh viễn.
+
+Đây là một trong 3 điểm con người đứng ra duyệt trong vòng đời 7 trạm — xem
+[Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc) để nắm đầy đủ chu trình
+configure → run → quan sát → review.
+
+## Ghi nhớ sau lần đầu
+
+- **Token DSH đổi sau mỗi lần restart** — cập nhật `DSH_TOKEN` trong `run_backend.sh` rồi chạy lại
+  script. Backend đang chạy sẽ 401 hàng loạt nếu bỏ qua. Chi tiết:
+  [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co).
+- **Vận hành hằng ngày**: khởi động `bash run_backend.sh` · kiểm sống `curl :8100/api/health` ·
+  nạp spec mới `POST /api/v1/flows/sync` · xem log `tail -f backend.log`.
+- **Điều khiển giữa chừng**: PAUSE (giữ checkpoint) / STOP / `resume_run` — node đã xong không
+  chạy lại khi resume.
+
+## Sự cố thường gặp khi mới bắt đầu
+
+| Hiện tượng | Nguyên nhân | Xử lý |
+|---|---|---|
+| Health không trả `{"ok":true}` | backend chưa lên / env sai | `tail -f backend.log`, đối chiếu Bước 2 |
+| `401` từ mọi API | sai `WORKLOOP_TOKEN` | đối chiếu env với header gửi lên |
+| sync báo git lỗi | sai URL/creds factory repo | thử `git ls-remote <url>` thủ công |
+| workflow 404 khi run | chưa sync sau khi push spec | gọi `POST /api/v1/flows/sync` |
+| run kẹt `in_progress` | DSH chết hoặc token hết hạn | xem log backend; sửa env rồi restart backend |
+| run kẹt `suspended` | PAUSE/duyệt chưa được xử lý | `resume_run` hoặc trả lời card duyệt |
+
+Bảng đầy đủ + cơ chế bên dưới: [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co) ·
+[Runbook sự cố (admin)](/docs/admin-operations/runbook-su-co).
+
 ## Sau bước này
 
-- Làm quen vòng điều phối: configure → run → quan sát → review
-  ([Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc)).
-- Xem tổng quan kiến trúc để hiểu luồng: [Tổng quan 4 tầng](/docs/architecture/tong-quan-4-tang).
+- Nắm chu trình hằng ngày: [Vòng 4 bước — configure · run · quan sát · review](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc).
+- Giao việc bằng ngôn ngữ tự nhiên: [Agent Orchestrator (OpenCode)](/docs/user-guides/opencode-orchestrator/gioi-thieu).
+- Làm quen dashboard: [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard).
+- Hiểu luồng hệ thống: [Tổng quan 4 tầng](/docs/architecture/tong-quan-4-tang).

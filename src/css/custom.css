@@ -99,6 +99,143 @@
   --rule: #5b5b60;
 }
 
+/* ===== Màu trạng thái Infima — gom về xám graphite + đỏ accent =====
+   Admonition/alert của Docusaurus map ra: note→secondary, info→info,
+   tip→success, warning/caution→warning, danger→danger. Mặc định Infima tô
+   info = XANH, success = LỤC, warning = VÀNG — ghi đè toàn bộ scale + biến
+   contrast để trang chỉ còn đỏ–đen–trắng. */
+
+:root {
+  /* note (:::note) — xám trung tính ấm thay xám lạnh lệch xanh mặc định */
+  --ifm-color-secondary: #e9e8e6;
+  --ifm-color-secondary-dark: #d6d4d2;
+  --ifm-color-secondary-darker: #c8c6c4;
+  --ifm-color-secondary-darkest: #a4a2a0;
+  --ifm-color-secondary-light: #efeeec;
+  --ifm-color-secondary-lighter: #f3f2f0;
+  --ifm-color-secondary-lightest: #f7f6f4;
+  --ifm-color-secondary-contrast-background: #f4f3f1;
+  --ifm-color-secondary-contrast-foreground: var(--ink);
+
+  /* info (:::info) — xám graphite thay xanh dương */
+  --ifm-color-info: #5f6368;
+  --ifm-color-info-dark: #4a4e52;
+  --ifm-color-info-darker: #3f4246;
+  --ifm-color-info-darkest: #303338;
+  --ifm-color-info-light: #7c8085;
+  --ifm-color-info-lighter: #999da1;
+  --ifm-color-info-lightest: #b6b9bd;
+  --ifm-color-info-contrast-background: #f0efee;
+  --ifm-color-info-contrast-foreground: var(--ink);
+
+  /* tip (:::tip) — đỏ accent thay lục */
+  --ifm-color-success: #e74539;
+  --ifm-color-success-dark: #d03e33;
+  --ifm-color-success-darker: #c53b30;
+  --ifm-color-success-darkest: #a23028;
+  --ifm-color-success-light: #eb5e54;
+  --ifm-color-success-lighter: #ee6b62;
+  --ifm-color-success-lightest: #f3928b;
+  --ifm-color-success-contrast-background: #fdeeec;
+  --ifm-color-success-contrast-foreground: var(--ink);
+
+  /* warning (:::warning, :::caution) — đỏ accent thay vàng */
+  --ifm-color-warning: #e74539;
+  --ifm-color-warning-dark: #d03e33;
+  --ifm-color-warning-darker: #c53b30;
+  --ifm-color-warning-darkest: #a23028;
+  --ifm-color-warning-light: #eb5e54;
+  --ifm-color-warning-lighter: #ee6b62;
+  --ifm-color-warning-lightest: #f3928b;
+  --ifm-color-warning-contrast-background: #fdeeec;
+  --ifm-color-warning-contrast-foreground: var(--ink);
+
+  /* danger (:::danger) — đỏ đậm hơn một bậc để phân biệt với warning */
+  --ifm-color-danger: #d03e33;
+  --ifm-color-danger-dark: #c53b30;
+  --ifm-color-danger-darker: #a23028;
+  --ifm-color-danger-darkest: #87281f;
+  --ifm-color-danger-light: #eb5e54;
+  --ifm-color-danger-lighter: #ee6b62;
+  --ifm-color-danger-lightest: #f3928b;
+  --ifm-color-danger-contrast-background: #fdeeec;
+  --ifm-color-danger-contrast-foreground: var(--ink);
+
+  /* Inline code — xám trung tính thay xám lạnh mặc định */
+  --ifm-code-background: rgba(22, 24, 29, 0.06);
+}
+
+[data-theme='dark'] {
+  /* note (:::note) — xám than */
+  --ifm-color-secondary: #3a3b3e;
+  --ifm-color-secondary-dark: #4a4b4e;
+  --ifm-color-secondary-darker: #55565a;
+  --ifm-color-secondary-darkest: #6b6c70;
+  --ifm-color-secondary-light: #2c2d30;
+  --ifm-color-secondary-lighter: #232426;
+  --ifm-color-secondary-lightest: #1c1d1f;
+  --ifm-color-secondary-contrast-background: #1c1d1f;
+  --ifm-color-secondary-contrast-foreground: #e8e9ea;
+
+  /* info (:::info) — xám sáng thay xanh dương */
+  --ifm-color-info: #9aa0a6;
+  --ifm-color-info-dark: #7d8288;
+  --ifm-color-info-darker: #6a6f75;
+  --ifm-color-info-darkest: #565b60;
+  --ifm-color-info-light: #b4b8bd;
+  --ifm-color-info-lighter: #c5c9cd;
+  --ifm-color-info-lightest: #d7dade;
+  --ifm-color-info-contrast-background: #1b1d20;
+  --ifm-color-info-contrast-foreground: #eceef0;
+
+  /* tip (:::tip) — đỏ sáng (palette dark của theme) */
+  --ifm-color-success: #f2564a;
+  --ifm-color-success-dark: #f04a3d;
+  --ifm-color-success-darker: #e74539;
+  --ifm-color-success-darkest: #c53b30;
+  --ifm-color-success-light: #f56f65;
+  --ifm-color-success-lighter: #f68a82;
+  --ifm-color-success-lightest: #fbb0aa;
+  --ifm-color-success-contrast-background: #261416;
+  --ifm-color-success-contrast-foreground: #fbb0aa;
+
+  /* warning (:::warning, :::caution) — đỏ sáng thay vàng */
+  --ifm-color-warning: #f2564a;
+  --ifm-color-warning-dark: #f04a3d;
+  --ifm-color-warning-darker: #e74539;
+  --ifm-color-warning-darkest: #c53b30;
+  --ifm-color-warning-light: #f56f65;
+  --ifm-color-warning-lighter: #f68a82;
+  --ifm-color-warning-lightest: #fbb0aa;
+  --ifm-color-warning-contrast-background: #261416;
+  --ifm-color-warning-contrast-foreground: #fbb0aa;
+
+  /* danger (:::danger) */
+  --ifm-color-danger: #f2564a;
+  --ifm-color-danger-dark: #f04a3d;
+  --ifm-color-danger-darker: #e74539;
+  --ifm-color-danger-darkest: #c53b30;
+  --ifm-color-danger-light: #f56f65;
+  --ifm-color-danger-lighter: #f68a82;
+  --ifm-color-danger-lightest: #fbb0aa;
+  --ifm-color-danger-contrast-background: #261416;
+  --ifm-color-danger-contrast-foreground: #fbb0aa;
+
+  /* Inline code */
+  --ifm-code-background: rgba(255, 255, 255, 0.08);
+}
+
+/* Vệt highlight của alert — Infima hardcode rgba xanh/lục/vàng theo từng loại */
+.alert--info,
+.alert--secondary {
+  --ifm-alert-background-color-highlight: rgba(127, 127, 127, 0.12);
+}
+.alert--success,
+.alert--warning,
+.alert--danger {
+  --ifm-alert-background-color-highlight: rgba(231, 69, 57, 0.12);
+}
+
 /* Headings — sans đậm, tracking chặt (phong cách SaaS landing) */
 h1, h2, h3, h4, h5, h6,
 .hero__title {
@@ -454,6 +591,17 @@ h1, h2, h3, h4, h5, h6,
   border-radius: 0;
   max-height: 56px;
   width: auto;
+}
+
+/* ===== SƠ ĐỒ MERMAID — căn giữa trong trang ===== */
+.docusaurus-mermaid-container {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+.docusaurus-mermaid-container > svg {
+  max-width: 100%;
+  height: auto;
 }
 
 /* ===== DOC CARDS: hiện đầy đủ tên & tóm tắt (không cắt bằng "…") ===== */

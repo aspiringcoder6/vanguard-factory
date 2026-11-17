@@ -23,7 +23,7 @@ sidebar_position: 7
 | **Gate** | Node chốt chỉ nhận `DONE` — `DONE_WITH_CONCERNS` bị chặn |
 | **HITL** | Human-in-the-loop — điểm dừng chờ người duyệt/xin thông tin |
 | **Wave** | Tầng chạy song song của DAG; PAUSE dừng ở ranh giới wave |
-| **Re-arm** | Mở phiên mới khi stall — không mang hội thoại cũ, mang lỗi gần nhất |
+| **Re-arm** | Vòng điều khiển khi stall — **tái sử dụng phiên cũ** (giữ context đã làm chủ); submit fail mới kill + mở phiên mới |
 | **State machine** | Máy trạng thái task/node — [Trạng thái](/docs/reference/trang-thai) |
 | **Artifact** | Sản phẩm có bằng chứng: spec, brief, candidate, bằng chứng test, report, PR |
 | **Bằng chứng** | Quan sát đối chiếu được từ bên độc lập (test, log, video, trace) — PASS/FAIL đều phải có |

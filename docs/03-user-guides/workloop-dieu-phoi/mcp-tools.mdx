@@ -10,27 +10,26 @@ sidebar_label: Gọi tool MCP (nhanh)
 Trang này chỉ chứa **cách dùng hàng ngày**. Bảng tra đầy đủ (tham số, trả về) nằm ở
 [MCP Tools Reference](/docs/reference/mcp-tools) — theo quy tắc "một chỗ duy nhất".
 
-:::note Thông tin trang
-
-| | |
-|---|---|
-| **Hệ thống** | Workloop — gọi tool MCP |
-| **Người phụ trách** | *đang cập nhật* |
-| **Trạng thái tài liệu** | 🟢 Published |
-| **Trạng thái hệ thống** | ✅ Đã triển khai |
-| **Cập nhật** | 2026-11-13 |
-
-:::
-
 ## Năm tool hay dùng nhất
 
 | Tool | Khi nào dùng |
 |---|---|
-| `configure_workflow` | Định nghĩa/cập nhật workflow (spec + agents) |
-| `run_workflow` | Chạy workflow — trả `job_id` |
-| `get_run` | Xem trạng thái run (node nào xong, node nào chờ) |
-| `get_report` | Xem tin nhắn cuối + kết quả từng node |
-| `resume_run` | Chạy tiếp run đã PAUSE từ checkpoint |
+| `configure_workflow` | Định nghĩa/cập nhật workflow — ghi factory repo, trả `version` + `sha` |
+| `run_workflow` | Chạy workflow — trả `job_id`; `fresh=true` chạy lại sạch sau khi sửa spec |
+| `get_run` | Xem trạng thái run (node nào xong, node nào chờ, events lỗi) |
+| `get_report` | Xem sản phẩm từng node — tin nhắn cuối của agent (Status/commits/test/concerns) |
+| `resume_run` | Chạy tiếp run đang suspended (sau PAUSE) từ checkpoint — node đã xong không chạy lại |
+
+Tool hỗ trợ còn lại: `pause_run` (PAUSE/STOP) · `list_workflows`/`get_workflow` (workflow đã đăng
+ký) · `list_runs` · `record_pr` (track PR vào vòng đời) · bộ `confluence_*` (tìm/đọc/tạo/sửa trang).
+
+:::note[Không dùng `call_agent` thay workflow]
+
+`call_agent` chỉ gọi được **agent tĩnh** (ví dụ `spec` — soạn tài liệu thiết kế, bắt buộc
+`doc_type`: `ptyc`/`tkct`/`tkcsdl`). Worker thật (coder, reviewer…) chạy qua workflow theo `role`
+trong spec — muốn chạy việc, đi theo [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc).
+
+:::
 
 ## Ví dụ — một câu cho agent orchestrator
 

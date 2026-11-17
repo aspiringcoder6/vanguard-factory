@@ -1,24 +1,14 @@
 ---
 title: Giao diện dashboard
-description: Các tab của dashboard — Dashboard, Runs, Duyệt, Factory, Agents, Webhook, Automation, Integration, Secret.
+description: Các tab của dashboard — Dashboard, Workloop, Runs, Duyệt, Factory, Agents, Webhook, Automation, Integration, Secret.
 sidebar_position: 4
 ---
 
+import DashboardTongQuan from '@site/static/img/workloop-dashboard-tong-quan.jpeg';
+import DashboardDag from '@site/static/img/workloop-dashboard-dag.jpeg';
+import DashboardDuyet from '@site/static/img/workloop-dashboard-duyet.jpeg';
+
 # Giao diện dashboard
-
-:::note Thông tin trang
-
-| | |
-|---|---|
-| **Hệ thống** | Workloop — điều phối |
-| **Người phụ trách** | *đang cập nhật* |
-| **Trạng thái tài liệu** | 🟡 Draft |
-| **Trạng thái hệ thống** | ✅ Đã triển khai |
-| **Cập nhật** | 2026-11-13 |
-
-Ảnh chụp màn hình sẽ bổ sung vào `static/img/user-guides/` sau.
-
-:::
 
 Dashboard là giao diện quản trị tập trung của tầng Workflow. Các tab chính:
 
@@ -35,6 +25,28 @@ Dashboard là giao diện quản trị tập trung của tầng Workflow. Các t
 | **Integration** | Tích hợp ngoài (ví dụ Confluence) |
 | **Secret** | Quản lý ref secret (không hiển thị giá trị) |
 
+## Tab Dashboard — tổng quan hệ thống
+
+<figure className="diagram-figure">
+  <img src={DashboardTongQuan} alt="Tab Dashboard: thẻ chỉ số (job 7 ngày, tỷ lệ hoàn tất, số workflow, chờ duyệt, webhook 24h), biểu đồ hiệu suất chạy theo ngày, gauge trạng thái job và danh sách việc cần xử lý" loading="lazy" />
+  <figcaption>
+    Tab <strong>Dashboard</strong> — mở là thấy ngay sức khỏe hệ thống: khối lượng job 7 ngày, tỷ lệ
+    hoàn tất, gauge trạng thái job (đang chạy · hoàn tất · chờ · bị ngắt · lỗi) và hàng việc cần xử
+    lý dẫn thẳng sang tab tương ứng.
+  </figcaption>
+</figure>
+
+## Tab Workloop — canvas DAG
+
+<figure className="diagram-figure">
+  <img src={DashboardDag} alt="Tab Workloop: canvas DAG của workflow night-dag gồm 24 task và 77 edge, mỗi node là một card kèm model, trạng thái và tóm tắt brief; chú giải trạng thái node ở góc trái" loading="lazy" />
+  <figcaption>
+    Tab <strong>Workloop</strong> — cấu trúc DAG của workflow: mỗi card là một node (model, trạng
+    thái, tóm tắt brief), cạnh nối thể hiện phụ thuộc giữa các node. Chọn phiên bản spec và
+    <strong>Export JSON</strong> ở góc phải trên; legend trạng thái node ở góc trái dưới.
+  </figcaption>
+</figure>
+
 ## Luồng duyệt HITL trong tab Duyệt
 
 1. Node `need_review: human` tới lượt → run tạm dừng, tạo work request duyệt.
@@ -42,8 +54,17 @@ Dashboard là giao diện quản trị tập trung của tầng Workflow. Các t
 3. Người duyệt chọn chấp nhận/từ chối **kèm lý do**.
 4. Run tiếp tục; quyết định được ghi vào log trung lập.
 
-Cơ chế bên dưới: [Cổng duyệt](/docs/architecture/tang-2-workflow#cổng-duyệt-gates) ·
-[TaskLoop contract](/docs/architecture/giao-tiep#contract-taskloop).
+<figure className="diagram-figure">
+  <img src={DashboardDuyet} alt="Tab Duyệt: card duyệt HITL cho work request 'Duyệt tài liệu' — nguồn yêu cầu từ Slack, tài liệu Confluence kèm theo, tiến độ pipeline 3 bước và các nút Duyệt / Yêu cầu sửa / Từ chối" loading="lazy" />
+  <figcaption>
+    Tab <strong>Duyệt</strong> — card duyệt HITL: nguồn yêu cầu (Slack → Confluence), tiến độ
+    pipeline và ba quyết định <strong>Duyệt</strong> · <strong>Yêu cầu sửa</strong> ·
+    <strong>Từ chối</strong>. Bộ lọc <em>Chờ duyệt / Tất cả</em> nằm ở góc phải trên.
+  </figcaption>
+</figure>
+
+Cơ chế bên dưới: [Cổng duyệt & HITL](/docs/architecture/tang-2-workflow/cong-duyet-hitl) ·
+[Contract TaskLoop](/docs/architecture/giao-tiep#contract-taskloop).
 
 ## Kết quả đúng phải thấy
 

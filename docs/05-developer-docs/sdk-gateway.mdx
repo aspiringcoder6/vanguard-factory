@@ -1,6 +1,6 @@
 ---
 title: SDK & Gateway
-description: ReArmControlLoop, DSH SDK, OpenCode SDK — lớp giao tiếp với môi trường thực thi.
+description: HarnessGateway ABC, ReArmControlLoop, DSH/OpenCode SDK — lớp giao tiếp giữa engine và môi trường thực thi agent.
 sidebar_position: 5
 ---
 
@@ -8,15 +8,17 @@ sidebar_position: 5
 
 ## Kiến trúc gateway
 
-Gateway là lớp giữa **engine workflow** và **môi trường thực thi agent**. Cơ chế chịu lỗi dùng
-chung nằm ở lớp nền:
+Gateway là lớp giữa **engine workflow (Tầng 2)** và **môi trường thực thi agent (Tầng 3)**.
+Nguyên tắc kiểu Java interface: engine **không import SDK của harness nào** — chỉ dùng interface
+`HarnessGateway` + các DTO chuẩn (`TaskSpec`, `Contract`, `SessionRef`, `SessionHealth`,
+`ApprovalRequest`).
 
 ```
                   ┌────────────────────────────┐
-   Engine DAG ───▶│  ReArmControlLoop (base)   │  stall → re-arm phiên mới
-                  │  · token budget            │  không mang hội thoại cũ,
-                  │  · max_rearms              │  mang lỗi gần nhất sang
-                  └──────────┬─────────────────┘
+   Engine DAG ───▶│  ReArmControlLoop (base)   │  stall → re-arm TÁI SỬ DỤNG session
+                  │  · token budget            │  submit fail → kill + session mới
+                  │  · max_rearms              │  taxonomy lỗi → chính sách chung
+                  └──────────┬─────────────┘
                              │ 4 hook do gateway cài
               ┌──────────────┴──────────────┐
               ▼                             ▼
@@ -27,33 +29,61 @@ chung nằm ở lớp nền:
    └────────────────────┘        └────────────────────┘
 ```
 
-## ReArmControlLoop — vòng chịu lỗi chung
+Chọn gateway bằng `factory.yaml` (`harness.kind`): `dsh` (harness nội bộ) · `opencode` (agent
+nền OpenCode) · `fake` (smoke-test không tốn token).
 
-- **Stall → re-arm:** phiên không tiến triển → mở phiên mới từ spec cố định, mang lỗi gần nhất
-  ([Task loop](/docs/architecture/kiem-chung-phuc-hoi/ba-vong-cai-tien)).
-- **Ngân sách:** giới hạn token/thời gian; hết ngân sách → dừng có kiểm soát.
-- **`max_rearms`:** giới hạn số lần thử; hết lượt → node `REARM_EXHAUSTED`.
-- Gateway cụ thể cài 4 hook (bắt đầu phiên, quan sát, kết thúc, thu bằng chứng).
+## HarnessGateway — hai tầng interface
+
+**Tầng TASK (cấp cao)** — engine gọi duy nhất đường này để giao việc:
+
+- `run_contract_task(name, role, brief, …)` → `Contract` — harness tự lo mọi thứ: tạo contract
+  taskloop, mở session, prompt, stall/re-arm, chờ terminal, thu report.
+
+**Tầng CONTROL (cấp hàm)** — soi/tác động bên trong khi cần giám sát:
+
+- Vòng đời session: `open_session` / `submit_prompt` / `poll_session` / `kill_session`.
+- Quan sát: `read_session_content`, `diagnose_session` (verdict chuẩn: `clean`/`abrupt`/
+  `aborted`/`provider_err`/`still_running`/`empty`), `session_stats`, `usage_report`.
+- HITL: `pending_approvals` / `answer_approval`.
+- Files phía server: `read_file` / `list_files` / `write_file`.
+
+Quy tắc: method bắt buộc là `@abstractmethod`; method tùy chọn raise `NotImplementedError` —
+harness **phải khai báo đúng `capabilities()`** để bên gọi không gọi hú họa.
+
+## ReArmControlLoop — Template Method
+
+Chính sách chịu lỗi chung, harness chỉ cài 4 hook (`_open_session`, `_submit`, `_poll`, `_kill`).
+Chi tiết vòng lặp và các nhánh xử lý: [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi).
+Điểm thiết kế đáng nhớ:
+
+- **Re-arm tái sử dụng session cũ** — giữ context agent đã làm chủ (thất bại thật khi mở session
+  mới liên tiếp: agent đọc lại brief từ đầu rồi stall lại).
+- **Submit fail ≠ stall** — chưa chắc agent nhận việc → kill session (hủy cả prompt đã queue) rồi
+  mở session mới; không retry mù ở tầng RPC (prompt nhân bản).
+- **Token budget** — task có trần; harness nào cài `usage` sẽ bị kiểm tra mỗi vòng, vượt → kill.
+- **Chính sách theo mã lỗi** — `retry_policy()`: `AUTH`/`MISSING_CREDENTIAL`/`INVALID_INPUT` →
+  abort · `CONTRACT_CONFLICT` → skip · `RATE_LIMIT`/`PROVIDER_5XX` → backoff · còn lại → re-arm.
+
+## Contract — DTO trạng thái chuẩn
+
+`Contract` là hợp đồng giữa engine và gateway: `n` (định danh `<workflow>--<node>--<run>`),
+`status` (6 trạng thái chuẩn), `attempts` (số lần re-arm + 1), `report_summary`, `report_path`,
+`session_ref` (OPAQUE — engine không hiểu bên trong, chỉ giữ để cancel), `events` (trail Gantt/SSE),
+`errors` (theo taxonomy). Trạng thái: [State machine vòng đời](/docs/architecture/tang-2-workflow/state-machine).
 
 ## DSH SDK
 
-Client đầy đủ cho harness (DSH): quản lý **session/workspace/project**, gọi **plugin taskloop**
-(create/get/list/update task), đọc vault qua ref, bắt sự kiện phiên. Dùng khi môi trường thực thi
-là harness DSH.
+Client đầy đủ cho harness nội bộ: quản lý **session/workspace/project**, gọi **plugin taskloop**
+(create/get/list/update task), đọc vault qua ref, bắt sự kiện phiên, đọc usage/health. Contract
+được tạo **server-side ngay khi giao việc** (IN_PROGRESS ngay — người theo dõi thấy tiến độ) và
+brief được ghi thành file để agent đọc (tránh vượt giới hạn độ dài prompt).
 
 ## OpenCode SDK
 
-Client cho nền agent OpenCode: kết nối server, ghép cặp (pair), mở session, gửi prompt. Dùng bởi
-gateway OpenCode và bởi MCP `call_agent` khi orchestrator gọi agent cụ thể.
-
-## Khi nào chọn gateway nào
-
-| Tình huống | Gateway |
-|---|---|
-| Chạy trên hạ tầng harness nội bộ, cần taskloop/vault/HITL | DSH SDK |
-| Chạy với agent nền OpenCode | OpenCode SDK |
+Client cho nền agent OpenCode: kết nối server (pair qua env `OPENCODE_TOKEN`), mở session, gửi
+prompt. Dùng bởi gateway OpenCode và bởi MCP `call_agent` khi orchestrator gọi agent cụ thể.
 
 ## Liên kết
 
-- Nguyên tắc phục hồi gián đoạn: [Phục hồi gián đoạn](/docs/architecture/kiem-chung-phuc-hoi/phuc-hoi-gian-doan)
+- Vòng chịu lỗi đầy đủ (3 tầng): [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi)
 - Trạng thái node khi re-arm hết lượt: [Trạng thái](/docs/reference/trang-thai)
