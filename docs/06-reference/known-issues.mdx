@@ -17,7 +17,6 @@ trạng thái của từng vấn đề để biết trước những gì đang c
 | KI-03 | **Workflow 404 nếu chưa sync sau khi push spec** | Người mới hay gặp — spec có trong Git nhưng backend chưa biết | Gọi `POST /api/v1/flows/sync` sau khi đổi spec | Cân nhắc auto-sync qua webhook |
 | KI-04 | **Session nằm ngoài workspace nếu thiếu `WORKLOOP_DSH_WS`** | Task chạy nhầm vị trí | Kiểm tra env trước khi run | Đang xử lý |
 | KI-05 | **Luồng TestForge → Sandbox là hướng tích hợp đề xuất** | Chưa khẳng định chạy E2E trong triển khai thực tế | Đối chiếu bằng một lần chạy thật trước khi đưa vào quy trình chính thức | Chờ kiểm chứng E2E |
-| KI-06 | **Hình minh họa docs chưa xuất từ slide** | Trang kiến trúc dùng sơ đồ text tạm thời | Xem quy ước hình: `static/img/README.md` | Đang bổ sung |
 
 ## Quy tắc ghi nhận
 
@@ -28,4 +27,6 @@ trạng thái của từng vấn đề để biết trước những gì đang c
 
 ## Đã xử lý gần đây
 
-*(chưa có mục nào — cập nhật khi có)*
+| # | Vấn đề | Xử lý |
+|---|---|---|
+| KI-06 | **Hình minh họa docs chưa xuất từ slide** | Trang kiến trúc dùng sơ đồ **Mermaid** làm hình chính (bỏ ghi chú chờ xuất slide); ảnh chụp dashboard (Dashboard · DAG · Duyệt) đã nhúng vào [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard). Ảnh TestForge/Sandbox còn thiếu — theo dõi tại `static/img/README.md` |

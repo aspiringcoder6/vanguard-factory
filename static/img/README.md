@@ -28,9 +28,14 @@ static/img/03-user-guides/workloop-dashboard-runs.png
 
 ## Slot đang chờ hình
 
-- `02-architecture/` — tổng quan 4 tầng, từng tầng, luồng E2E, data flow, security
-- `03-user-guides/` — ảnh chụp dashboard (Runs, Duyệt), TestForge, Sandbox
-- `06-reference/` — ma trận năng lực
+- `03-user-guides/` — ✅ **ảnh chụp dashboard đã có** (tại thư mục gốc `static/img/`, nhúng trong
+  trang Giao diện dashboard):
+  `workloop-dashboard-tong-quan.jpeg` · `workloop-dashboard-dag.jpeg` · `workloop-dashboard-duyet.jpeg`.
+  Còn thiếu: ảnh TestForge, Sandbox.
+- `02-architecture/` — các trang đã dùng **sơ đồ Mermaid** làm hình chính (không còn chờ xuất
+  slide); chỉ xuất hình từ slide khi cần thay thế ảnh hiện có
+  (`vaiplatform-kien-truc-tong-the.jpeg`, `adlc-kien-truc-nen-tang.png`, `adlc-vong-doi.png`).
+- `06-reference/` — ma trận năng lực (hiện dùng bảng markdown, chưa có hình).
 
 > Lưu ý: chỉ xuất hình **không chứa** thông tin nhạy cảm (token, URL nội bộ thật, tên workflow/agent
 > của tenant). Kiểm tra trước khi commit.

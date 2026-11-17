@@ -28,7 +28,7 @@ const FEATURES: Feature[] = [
     eyebrow: 'Human gates',
     title: 'Con người đứng ở 3 điểm duyệt',
     text: 'Agent làm phần nặng; Spec, Review và Ship chờ phê duyệt của người. Bị từ chối thì ticket quay lại đúng trạm để sửa — mọi quyết định đều để lại vết.',
-    to: '/docs/fundamentals/vong-doi-7-tram',
+    to: '/docs/fundamentals/triet-ly/vong-doi-7-tram',
     cta: 'Vòng đời 7 trạm',
   },
   {
@@ -65,8 +65,8 @@ function Hero() {
           </Link>
           <Link
             className={clsx('button', styles.btnGhost)}
-            to="/docs/architecture/tong-quan-4-tang">
-            Kiến trúc 4 tầng
+            to="/docs/user-guides/dung-he-thong-lan-dau">
+            Cài đặt ngay
           </Link>
         </div>
       </div>

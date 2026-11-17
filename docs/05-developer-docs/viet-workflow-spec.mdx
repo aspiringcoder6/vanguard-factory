@@ -1,52 +1,103 @@
 ---
 title: Viết workflow spec
-description: DSL spec.yaml kiểu Kestra — node types, brief, review, wave.
+description: DSL spec.yaml — hai dạng viết (Kestra-style và nodes/edges), node types, ngân sách, nguyên tắc viết brief.
 sidebar_position: 2
 ---
 
 # Viết workflow spec
 
-Cú pháp đầy đủ + tham chiếu trường: [Spec DSL](/docs/reference/spec-dsl). Trang này là **nguyên
-tắc viết**.
+Cú pháp đầy đủ + tham chiếu trường: [Spec DSL](/docs/reference/spec-dsl). Trang này là **nguyên tắc
+viết** — kèm hai dạng spec thật.
 
 ## Tư duy cơ bản
 
-- Spec mô tả **DAG công việc**: các node có thể chạy song song (tổ chức thành **wave** theo bậc phụ
-  thuộc), kết nối bằng cạnh.
+- Spec mô tả **DAG công việc**: node chạy song song theo **wave** (tổ chức tự động theo bậc phụ
+  thuộc), nối bằng cạnh. Cấu trúc = luồng — 1 file kể trọn câu chuyện.
 - Mỗi node = một đơn vị giao việc cho agent theo **role** — brief là hợp đồng giao việc.
-- Mọi logic có nhánh/review đều **nêu rõ trong spec**, không giấu trong hội thoại.
+- Mọi logic có nhánh/review đều **nêu rõ trong spec** (điều kiện, trần vòng, reviewer là ai) —
+  không giấu trong hội thoại.
+- Đổi spec = commit Git. Trong quy trình có kiểm soát, thay đổi đi qua **cổng PR spec** —
+  [Cổng duyệt & HITL](/docs/architecture/tang-2-workflow/cong-duyet-hitl).
 
-## Ví dụ mẫu (tên giả định)
+## Dạng 1 — Kestra-style `tasks:` (dòng thẳng + song song)
+
+Cấu trúc = luồng: thứ tự trong list là thứ tự chạy; ngầm định task sau nhận `report` của task
+trước làm `context`; `Parallel` fan-out/fan-in. *Ví dụ thực `login-api`*:
 
 ```yaml
+id: login-api
+description: Tính năng đăng nhập — backend JWT + frontend form, review rồi release.
+
 tasks:
-  - id: phan-tich
+  - id: triage
     type: WorkloopTask
-    role: analyst
+    role: researcher
     brief: |
-      Phân tích yêu cầu <ngữ cảnh tự đủ: đầu vào, đầu ra, ràng buộc>.
-      Kết quả ghi reports/phan-tich.md
+      Khảo sát repo, xác định module ảnh hưởng. Báo cáo checklist,
+      tách rõ phần việc cho coder backend và coder frontend.
 
-  - id: trien-khai
+  - id: build
+    type: Parallel               # fan-out — 2 nhánh chạy song song
+    tasks:
+      - id: impl_be
+        type: WorkloopTask
+        role: coder
+        token_budget: 200000     # trần token 1 task — vượt → kill + re-arm
+        brief: |
+          Implement Login API backend (POST /api/login): validate, trả JWT.
+          Viết unit test happy-path + case sai mật khẩu. Không đụng frontend.
+
+      - id: impl_fe
+        type: WorkloopTask
+        role: coder
+        token_budget: 200000
+        brief: |
+          Implement màn hình Login frontend: form, gọi POST /api/login,
+          hiển thị lỗi, lưu token. Không đụng backend.
+
+  - id: verify                   # fan-in — gộp kết quả cả 2 nhánh
     type: WorkloopTask
-    role: coder
-    need_review: agent        # node review chạy sau khi node này xong
-    brief: |
-      Dựa trên reports/phan-tich.md, cài đặt <tính năng>.
-      Định nghĩa xong: <tiêu chí "xong" đo được>
-
-  - id: review-code
-    type: ReviewNode
     role: reviewer
-    # cạnh ngược trỏ về node "trien-khai" — review lặp lại tới đạt
-
-  - id: chot
-    type: WorkloopTask
-    role: releaser
-    gate: true                # chỉ nhận DONE — DONE_WITH_CONCERNS bị chặn
+    pass_full: upstream          # nhận đủ report + response của node trước
+    brief: |
+      Review tổng thể: đọc report 2 phía impl_be + impl_fe, kiểm tra
+      acceptance criteria, liệt kê vấn đề nếu có.
 ```
 
-Cấu trúc có thể lồng: **Parallel / Sequential** cho nhóm việc; **Condition** cho rẽ nhánh.
+## Dạng 2 — `nodes:` + `edges:` (khi cần cạnh ngược)
+
+Vòng review quay ngược (fix-loop) khai rõ 3 cạnh: node → gate, gate `approved` → tiếp,
+gate `changes_requested` → **về node bị review**. *Ví dụ thực `review-cycle`*:
+
+```yaml
+id: review-cycle
+description: Vòng review quay ngược — changes_requested resume session node con.
+
+nodes:
+  work:
+    type: WorkloopTask
+    role: coder
+    brief: |
+      Viết file reports/cycle.md ... Kết thúc.
+  gate:
+    type: ReviewNode
+    reviewer: human            # human = card HITL · agent = session reviewer mới mỗi vòng
+    max_rounds: 2              # bộ đếm do ENGINE giữ — vượt trần → BLOCKED + leo thang
+    criteria: "reports/cycle.md phải có đúng 3 dòng và ..."
+  next:
+    type: WorkloopTask
+    role: coder
+    brief: |
+      Đọc reports/cycle.md, viết file reports/next.md ...
+
+edges:
+  - "work.report -> gate.context"
+  - "gate.approved -> next.context"
+  - "gate.changes_requested -> work.context"   # cạnh ngược — resume cùng session
+```
+
+Rẽ nhánh theo điều kiện dùng node `Condition` (biểu thức `status == DONE`, `contains:`,
+`regex:`) — chi tiết cơ chế: [Thực thi DAG](/docs/architecture/tang-2-workflow/thuc-thi-dag).
 
 ## Nguyên tắc viết brief
 
@@ -55,16 +106,22 @@ Cấu trúc có thể lồng: **Parallel / Sequential** cho nhóm việc; **Cond
 2. **Kỳ vọng đo được** — "xong" phải kiểm chứng được
    ([kiểm chứng độc lập](/docs/architecture/kiem-chung-phuc-hoi/kiem-chung-doc-lap)).
 3. **Không secret trong brief** — chỉ tên ref.
-4. Đặt ngân sách hợp lý: `timeout_s`, `stall_s`, `max_rearms`.
+4. **Đặt ngân sách hợp lý**: `timeout_s` / `stall_s` / `max_rearms` / `token_budget` — node dài
+   mà không trần là node treo cả run; re-arm tái sử dụng session nên trần hời hơn nhiều so với
+   chạy lại.
+5. Brief dài → chuyển sang `briefs/<node>.md` (ưu tiên nạp: inline > file > rỗng).
 
 ## Quy trình đưa spec vào chạy
 
-1. Viết/sửa spec trong factory repo (hoặc qua `configure_workflow`).
-2. Sync: `POST /api/v1/flows/sync` — backend cập nhật chỉ mục, trả SHA.
-3. Chạy thử `fresh=true` với workflow nhỏ trước khi đưa vào quy trình thật.
+1. Viết/sửa spec trong factory repo (hoặc qua `configure_workflow` — validate fail-loud trước khi
+   ghi, sai là bị từ chối kèm ví dụ đúng).
+2. Sync: `POST /api/v1/flows/sync` — backend cập nhật chỉ mục, trả SHA; **run gắn SHA** để trace
+   ngược đúng phiên bản.
+3. Chạy thử `fresh=true` với workflow nhỏ trước khi đưa vào quy trình thật; run lại sau sửa dùng
+   `resume=true` để tận dụng node đã xong — [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi).
 
 ## Liên kết
 
 - Node types & trạng thái: [Spec DSL](/docs/reference/spec-dsl) ·
   [Trạng thái](/docs/reference/trang-thai)
-- Cổng duyệt spec (PR spec): [Tầng 2](/docs/architecture/tang-2-workflow)
+- Cách engine chạy spec: [Thực thi DAG](/docs/architecture/tang-2-workflow/thuc-thi-dag)

@@ -1,0 +1,65 @@
+---
+title: Triết lý thiết kế
+description: Agent làm phần nặng — người duyệt 3 điểm; tách điều phối khỏi thực thi; everything is a plugin.
+sidebar_position: 3
+---
+
+import AdlcKienTrucNenTang from '@site/static/img/adlc-kien-truc-nen-tang.png';
+
+# Triết lý: agent làm phần nặng, con người duyệt 3 điểm
+
+ADLC đặt cược vào một sự đơn giản: agent làm việc lặp lại có tiêu chí *tin cậy hơn con người*, nhưng
+không thể tự biết *khi nào đúng lúc dừng*. Triết lý thiết kế theo đó gồm ba nguyên tắc.
+
+## Tách điều phối khỏi thực thi — không xây một Siêu Agent
+
+Hệ thống tách bạch **hai năng lực phối hợp** thay vì gộp vào một agent khổng lồ:
+
+- **Harness** — giúp *một* agent đủ năng lực hoàn thành nhiệm vụ: vòng lặp quan sát–hành động, ngữ
+  cảnh, bộ nhớ, công cụ, phục hồi lỗi.
+- **Orchestrator** — giúp *nhiều* năng lực phối hợp với nhau: chia việc & routing, phụ thuộc & dữ
+  liệu, cổng duyệt con người.
+
+Một Siêu Agent bị loại bỏ vì: ngữ cảnh phải chứa mọi thứ nên tràn và nhiễu; một điểm hỏng làm sập
+toàn hệ thống; kế hoạch đi sai thì không thể chặn giữa đường.
+
+Phân tích chi tiết hai năng lực này kèm sơ đồ:
+[AI Agent & Multi-Agent System](/docs/fundamentals/triet-ly/ai-agent-multi-agent#hai-năng-lực-phối-hợp-harness-vs-orchestrator).
+
+## Ba điểm con người duyệt
+
+Con người không đụng vào từng bước trung gian — agent làm phần nặng. Người chỉ đứng ở **ba cổng duyệt
+đỏ**, nơi một sai lầm trượt qua sẽ tốn tiền sửa nhất:
+
+| Cổng | Câu hỏi của người duyệt | Bằng chứng đặt trước mặt |
+|---|---|---|
+| **1 · Đặc tả** | Làm đúng *việc* chưa? | Spec được duyệt và đóng băng đúng phiên bản trước khi giao việc |
+| **2 · Mã nguồn** | Làm đúng *cách* chưa? | Candidate qua test bảo vệ độc lập mới tới người duyệt |
+| **3 · Sản phẩm** | Đủ *giá trị* chưa? | Nghiệm thu trên artifact phát hành trước khi release |
+
+Giữa các cổng, hệ thống tự chạy trọn vòng ADLC — Monitor → Triage → Spec → Implement → Verify →
+Ship — và kết quả giám sát quay về đầu vòng thành yêu cầu mới, không ai phải nhắc việc. Chỉ khi
+một cổng duyệt từ chối, công việc mới dừng lại trước con người.
+
+Sơ đồ vòng đời đầy đủ kèm vai trò con người ở từng trạm nằm ở trang con:
+[Vòng đời công việc — các trạm và cổng duyệt](/docs/fundamentals/triet-ly/vong-doi-7-tram).
+
+## Everything is a plugin
+
+Các năng lực **thay thế được** nối vào Harness qua những điểm mở rộng rõ ràng:
+Model/Runtime, Tools/Connectors, Project Memory, Sandbox, Testing/Verify, Artifact/Delivery.
+
+- Plugin **cung cấp hoặc sử dụng** service, API và event theo contract đã định sẵn.
+- Phần core giữ **danh tính, trạng thái, quyền** và kiểm tra tính toàn vẹn (plugin lock).
+- ADLC giữ quyền duyệt kế hoạch và nghiệm thu toàn workflow.
+
+## Trong phần này
+
+- [Vòng đời công việc — các trạm và cổng duyệt](/docs/fundamentals/triet-ly/vong-doi-7-tram):
+  triết lý trên chạy thực tế như thế nào — 6 trạm ADLC và 3 cổng duyệt đỏ.
+- [AI Agent & Multi-Agent System](/docs/fundamentals/triet-ly/ai-agent-multi-agent):
+  năng lực và giới hạn của agent — vì sao tách điều phối khỏi thực thi là bắt buộc.
+
+## Mở đầu sang kiến trúc
+
+Triết lý này cụ thể hóa thành 4 tầng: [Kiến trúc tổng thể 4 tầng](/docs/architecture/tong-quan-4-tang).

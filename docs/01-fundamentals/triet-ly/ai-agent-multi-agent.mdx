@@ -1,0 +1,115 @@
+---
+title: AI Agent & Multi-Agent System
+description: Agent là gì, khả năng và giới hạn — hai năng lực phối hợp Harness & Orchestrator và vì sao không xây một Siêu Agent.
+sidebar_position: 5
+---
+
+import HarnessVsOrchestrator from '@site/static/img/harness-vs-orchestrator.png';
+
+# AI Agent & Multi-Agent System
+
+## Agent là gì
+
+**Agent = Model + Tools + Vòng lặp tự quyết.** Model chỉ là bộ máy suy luận — thứ biến nó thành
+"người làm" là vòng lặp quanh model.
+
+Khác với chat một lượt, agent:
+
+1. **Nhận mục tiêu** (task) thay vì chỉ câu hỏi — mô tả *kết quả cần đạt*, không phải *câu trả lời*.
+2. **Tự lập kế hoạch** — chia mục tiêu thành các bước, chọn công cụ cho từng bước.
+3. **Dùng công cụ** thực hiện hành động thật — đọc/ghi file, chạy lệnh, gọi API, thao tác UI.
+4. **Quan sát kết quả** rồi quyết định bước tiếp theo — lặp lại tới khi xong hoặc hết ngân sách.
+
+Một vòng điển hình: *"bổ sung API đăng nhập"* → đọc spec và code hiện có → sửa file → chạy test →
+thấy 2 case đỏ → sửa tiếp → test xanh → báo xong. Chính vòng lặp này tạo ra khoảng cách giữa
+*trả lời được* và *làm xong được*.
+
+## Khả năng và giới hạn
+
+| Agent làm tốt | Agent cần được kiểm soát |
+|---|---|
+| Thao tác lặp lại, có tiêu chí rõ | Tự nới tiêu chí khi gặp khó (hallucinate "xong") |
+| Làm việc với ngữ cảnh lớn, ít mệt mỏi | Sai lầm tin tưởng — nói dối một cách thuyết phục |
+| Chạy song song, mở rộng ngang | Quá hạn ngân sách token/thời gian mà không báo |
+| Tuân thủ quy trình được mô tả tốt | Mất hướng khi brief thiếu ngữ cảnh |
+
+Kết luận thiết kế: **khả năng hành động càng lớn, nhu cầu điều phối – kiểm chứng – quản trị càng
+lớn**. Đó là lý do ADLC tồn tại.
+
+## Vì sao không xây một Siêu Agent
+
+Nguyên tắc gốc của hệ thống: **tách điều phối khỏi thực thi** — xem
+[Triết lý thiết kế](/docs/fundamentals/triet-ly). Một agent duy nhất làm mọi vai (Siêu Agent) sẽ
+tràn ngữ cảnh, là một điểm hỏng duy nhất và không thể chặn giữa đường:
+
+| | Siêu Agent (bị loại bỏ) | Multi-Agent trong ADLC |
+|---|---|---|
+| Ngữ cảnh | Phải chứa mọi thứ → tràn, nhiễu | Mỗi agent chỉ nhận ngữ cảnh của việc mình |
+| Lỗi | Một điểm hỏng toàn hệ thống | Agent hỏng → re-arm riêng, không kéo theo cả hệ |
+| Năng lực | Một prompt làm mọi vai | Vai chuyên biệt (coder, reviewer, tester) theo persona |
+| Kiểm soát | Khó chặn giữa đường | Điều phối ở tầng riêng, gate/HITL rõ ràng |
+
+## Hai năng lực phối hợp: Harness vs Orchestrator
+
+Multi-Agent không phải là "nhiều model xếp cạnh nhau" — nó đứng trên **hai năng lực phối hợp khác
+nhau**, giải hai bài toán khác nhau:
+
+<figure className="diagram-figure">
+  <img src={HarnessVsOrchestrator} alt="Hai năng lực phối hợp: AI Agent Harness với vòng lặp Context – Memory – Tools – Execute – Observe – Recover cho một agent, và Agent Orchestration với task routing, dependencies & data, human approval cho nhiều agent chuyên biệt" loading="lazy" />
+  <figcaption>
+    Hai năng lực phối hợp: HARNESS giúp <em>một</em> agent đủ năng lực hoàn thành nhiệm vụ ·
+    ORCHESTRATOR giúp <em>nhiều</em> năng lực phối hợp với nhau thành một quy trình.
+  </figcaption>
+</figure>
+
+### Harness — năng lực của MỘT agent
+
+Harness là lớp bao quanh model, biến nó thành agent đủ sức hoàn thành nhiệm vụ. Sáu thành phần
+trong vòng lặp:
+
+| Thành phần | Vai trò |
+|---|---|
+| **Context** | Nạp đúng ngữ cảnh việc đang làm — spec, code liên quan, quy ước dự án; đủ để quyết, không quá để tràn |
+| **Memory** | Ghi nhớ qua các bước và các phiên — quyết định đã duyệt, kết quả đã chạy, tri thức dự án |
+| **Tools** | Bộ công cụ thật: đọc/ghi file, chạy lệnh, gọi API, duyệt web — nối qua plugin theo contract |
+| **Execute** | Thực thi trong môi trường có kiểm soát, quyền rõ ràng — sai không lan ra ngoài |
+| **Observe** | Đọc kết quả thật: exit code, log, diff, test report — đầu vào cho quyết định tiếp theo |
+| **Recover** | Lỗi không kết thúc công việc: thử cách khác, rollback, hoặc escalate kèm bằng chứng |
+
+Không có harness, model dù thông minh vẫn chỉ *trả lời*; có harness, nó mới *làm xong việc* — kể cả
+tự phục hồi khi gặp lỗi. Chi tiết triển khai:
+[Tầng 3 · Harness](/docs/architecture/tang-3-harness/tong-quan-harness).
+
+### Orchestrator — năng lực của NHIỀU agent
+
+Orchestrator đứng trên các agent chuyên biệt (research, coding, data, writing…), giữ trạng thái toàn
+cục của quy trình và chịu trách nhiệm ba việc:
+
+1. **Request & task routing** — nhận yêu cầu, tách thành task, giao đúng agent có đúng năng lực;
+   mỗi agent chỉ nhận ngữ cảnh của việc mình.
+2. **Dependencies & data** — bảo đảm thứ tự và luồng dữ liệu: sản phẩm của task này là đầu vào của
+   task kia; task độc lập thì chạy song song.
+3. **Human approval** — dừng chờ con người duyệt ở các điểm quyết định (đặc tả, mã nguồn, phát
+   hành); agent không tự vượt cổng.
+
+Orchestrator **không tự thực thi — chỉ điều phối**. Một agent hỏng được re-arm riêng mà không kéo
+cả quy trình sập. Chi tiết triển khai: [Tầng 2 · Workflow](/docs/architecture/tang-2-workflow/tong-quan).
+
+### Phân biệt nhanh
+
+| | **Harness** | **Orchestrator** |
+|---|---|---|
+| Phạm vi | Một agent | Nhiều agent / năng lực |
+| Câu hỏi trả lời | "Agent này có đủ điều kiện làm xong việc không?" | "Việc chia thế nào, ai làm, duyệt ở đâu?" |
+| Bên trong | Vòng lặp, ngữ cảnh, công cụ, phục hồi | Routing, phụ thuộc & dữ liệu, cổng duyệt |
+| Khi hỏng | Re-arm riêng, không lan | Điều phối lại, không mất trạng thái |
+| Trong ADLC | Tầng 3 — Harness | Tầng 2 — Workflow |
+
+Hai năng lực **bổ sung, không thay thế**: harness yếu thì agent không xong việc dù điều phối tốt;
+thiếu orchestrator thì một nhóm agent mạnh vẫn chỉ là đám đông không có kế hoạch.
+
+## Đọc tiếp
+
+- Vòng lặp cải tiến agent: [Ba vòng cải tiến](/docs/architecture/kiem-chung-phuc-hoi/ba-vong-cai-tien)
+- Đánh giá năng lực agent: [Ma trận năng lực](/docs/reference/ma-tran-nang-luc)
+- Giao việc cho agent: [Năm câu hỏi cốt lõi](/docs/fundamentals/nam-cau-hoi)

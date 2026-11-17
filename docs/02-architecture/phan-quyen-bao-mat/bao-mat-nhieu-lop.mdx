@@ -6,16 +6,23 @@ sidebar_position: 1
 
 # Security & Permission Model — bảo mật nhiều lớp (2.7)
 
-> Sơ đồ gốc nằm trong slide Sandbox Kit — xuất hình vào `static/img/02-architecture/` khi có.
-
 Mỗi mối nối giữa các tầng có một lớp rào chắn riêng; nhiều lớp cộng lại thành mô hình:
 
-```
-LỚP 1 · LỌC LỆNH        LỚP 2 · CÁCH LY              LỚP 3 · AUDIT         LỚP 4 · TRUY CẬP
-Broker kiểm lệnh,       Sandbox chạy trên            Mọi lệnh, mọi thay    Dashboard/API
-đường dẫn, giới         nhân ảo (user space),        đổi, mọi gate đều     qua bearer token
-hạn tài nguyên          giới hạn quyền & phạm        để lại dấu vết        + phân quyền theo
-mỗi phiên               vi truy cập mỗi phiên        trung lập             tenant/vai trò
+```mermaid
+flowchart LR
+    subgraph L1["Lớp 1 · Lọc lệnh"]
+        B["Broker kiểm lệnh · đường dẫn ·<br/>giới hạn tài nguyên mỗi phiên"]
+    end
+    subgraph L2["Lớp 2 · Cách ly"]
+        S["Sandbox trên nhân ảo user-space<br/>giới hạn quyền & phạm vi truy cập"]
+    end
+    subgraph L3["Lớp 3 · Audit"]
+        AU["Mọi lệnh · thay đổi · gate<br/>để lại dấu vết trung lập"]
+    end
+    subgraph L4["Lớp 4 · Truy cập"]
+        D["Dashboard/API qua bearer token<br/>phân quyền theo tenant/vai trò"]
+    end
+    L1 --> L2 --> L3 --> L4
 ```
 
 ## Chi tiết từng lớp
