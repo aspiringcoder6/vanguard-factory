@@ -6,7 +6,25 @@ sidebar_position: 1
 
 # Tầng 3 · Harness — bộ não & cánh tay hệ thống
 
-> Sơ đồ gốc nằm trong slide ADLC — xuất hình vào `static/img/02-architecture/` khi có.
+```mermaid
+flowchart TB
+    A["Agent trong task loop"] --> TL
+    subgraph H["Harness — core runtime & security"]
+        TL["Task loop contract<br/>+ memory bridge"]
+        VA["Central vault<br/>secret chỉ qua ref"]
+        PL["Plugin server<br/>+ webhook handler"]
+    end
+    TL --> VA
+    TL --> PL
+    PL -->|"HTTP REST theo contract"| P
+    subgraph P["Hệ sinh thái plugin"]
+        direction LR
+        G["Gitea<br/>source of truth"]
+        M["Agent Memory (Cognee)<br/>ngữ cảnh dự án"]
+        T["TestForge AI<br/>kiểm chứng độc lập"]
+        B["Steel · Playwright/k6<br/>browser & tải"]
+    end
+```
 
 ## Core Runtime & Security
 
@@ -34,6 +52,10 @@ Mọi năng lực (model/runtime, tools/connectors, memory, sandbox, testing, ar
 vào harness qua **điểm mở rộng rõ ràng**, theo contract định sẵn — xem
 [Viết plugin](/docs/developer-docs/viet-plugin).
 
-:::info Hướng dẫn sử dụng
-Cài đặt, tạo session, dùng plugin taskloop: [HDSD Harness/DSH](/docs/user-guides/harness-dsh/gioi-thieu).
+:::info[Hướng dẫn sử dụng]
+
+Để làm với harness (không chỉ đọc kiến trúc): cài đặt, tạo phiên agent và gọi plugin qua taskloop —
+xem [HDSD Harness/DSH](/docs/user-guides/harness-dsh/gioi-thieu). Vai trò từng plugin con trong
+bảng trên có trang riêng ở mục Hướng dẫn sử dụng.
+
 :::

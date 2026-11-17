@@ -1,0 +1,8 @@
+{
+  "label": "Tầng 2 — Workflow (Control Plane)",
+  "position": 3,
+  "link": {
+    "type": "doc",
+    "id": "architecture/tang-2-workflow/tong-quan"
+  }
+}

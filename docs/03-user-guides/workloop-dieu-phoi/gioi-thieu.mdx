@@ -1,0 +1,69 @@
+---
+title: Workloop — hướng dẫn sử dụng
+description: Điều phối workflow trên Workloop — định nghĩa spec, chạy run, quan sát, duyệt HITL, xử cố.
+sidebar_position: 1
+---
+
+# Workloop — hướng dẫn sử dụng
+
+**Workloop** là bộ điều phối (control plane) của ADLC: nhận spec workflow (DAG các node) từ factory
+repo, điều phối agent thực thi từng node qua harness, giữ state machine vòng đời run và các **cổng
+duyệt HITL** cho con người. Bạn thao tác với nó qua một trong ba đường: **agent orchestrator**
+(MCP `workloop-factory`), **REST API** hoặc **dashboard**.
+
+Vai trong kiến trúc: [Tầng 2 — Workflow](/docs/architecture/tang-2-workflow/tong-quan). Phần này
+**không giảng lại cơ chế** — chỉ hướng dẫn thao tác và link về trang kiến trúc khi cần nền tảng
+(quy tắc "một chỗ duy nhất").
+
+## Ai dùng gì
+
+| Vai | Làm gì trên Workloop | Bắt đầu từ |
+|---|---|---|
+| Người chạy workflow | Định nghĩa spec, chạy run, theo dõi, điều khiển giữa chừng | [Cài đặt](/docs/user-guides/workloop-dieu-phoi/cai-dat) → [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc) |
+| Người duyệt (reviewer/PM) | Xử lý card duyệt HITL — chấp nhận/từ chối kèm lý do | [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard) |
+| Người tích hợp | Nối agent orchestrator qua MCP, nhận việc từ nguồn ngoài | [Gọi tool MCP](/docs/user-guides/workloop-dieu-phoi/mcp-tools) |
+| Quản trị hệ thống | Cấu hình, secret, automation, giám sát | [04 · Vận hành](/docs/admin-operations/moi-truong-trien-khai) |
+
+## Luồng sử dụng điển hình
+
+1. **Cài đặt một lần** — backend chạy ở `:8100`, sync được factory repo, smoke test workflow 1 node
+   PASS: [Cài đặt](/docs/user-guides/workloop-dieu-phoi/cai-dat).
+2. **Vòng 4 bước** — configure → run → quan sát → review, qua MCP hoặc REST:
+   [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc).
+3. **Quan sát & duyệt** trên dashboard — tab **Runs** (Gantt, report từng node), tab **Duyệt**
+   (HITL): [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard).
+4. **Xử cố** khi run treo, 401 hàng loạt, node không tiến triển:
+   [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co).
+
+## Các trang hướng dẫn
+
+1. [Cài đặt](/docs/user-guides/workloop-dieu-phoi/cai-dat) — triển khai backend, env var, cắm MCP,
+   smoke test
+2. [Vòng 4 bước](/docs/user-guides/workloop-dieu-phoi/vong-4-buoc) — chu trình hằng ngày
+   configure · run · quan sát · review
+3. [Gọi tool MCP (nhanh)](/docs/user-guides/workloop-dieu-phoi/mcp-tools) — 5 tool hay dùng nhất +
+   ví dụ câu lệnh
+4. [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard) — các tab, luồng
+   duyệt HITL
+5. [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co) — sự cố thường gặp, khi nào chuyển đội kỹ
+   thuật
+
+## Kết quả đúng phải thấy
+
+Sau khi đi hết các trang trong phần này:
+
+- Backend workloop chạy, sync được factory repo, run xong workflow 1 node (smoke test PASS).
+- Bạn thực hiện trọn vòng 4 bước qua MCP hoặc REST — run `completed`, PR của agent nằm ở Gitea
+  **chờ người duyệt merge**.
+- Bạn xử lý được sự cố cơ bản (401 sau restart DSH, run kẹt `suspended`) và biết khi nào chuyển đội
+  kỹ thuật.
+
+## Liên kết
+
+- Kiến trúc: [Tầng 2 — Workflow](/docs/architecture/tang-2-workflow/tong-quan) ·
+  [Cổng duyệt & HITL](/docs/architecture/tang-2-workflow/cong-duyet-hitl) ·
+  [State machine vòng đời](/docs/architecture/tang-2-workflow/state-machine)
+- Tra cứu: [MCP Tools Reference](/docs/reference/mcp-tools) · [API REST](/docs/reference/api-rest) ·
+  [Trạng thái](/docs/reference/trang-thai)
+- Vận hành: [Môi trường triển khai](/docs/admin-operations/moi-truong-trien-khai) ·
+  [Runbook sự cố](/docs/admin-operations/runbook-su-co)
