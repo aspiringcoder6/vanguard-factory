@@ -6,37 +6,39 @@ sidebar_position: 2
 
 # Vòng 4 bước: configure → run → quan sát → review
 
-:::note Thông tin trang
+Cả 4 bước làm được qua 2 đường: **MCP** (nói chuyện với agent orchestrator bằng ngôn ngữ tự nhiên)
+hoặc **REST API** (gọi trực tiếp). Bảng tool đầy đủ: [MCP Tools](/docs/reference/mcp-tools) ·
+[API REST](/docs/reference/api-rest). Cơ chế bên dưới:
+[Tầng 2 — Workflow](/docs/architecture/tang-2-workflow/tong-quan).
 
-| | |
-|---|---|
-| **Hệ thống** | Workloop — điều phối |
-| **Người phụ trách** | *đang cập nhật* |
-| **Trạng thái tài liệu** | 🟢 Published |
-| **Trạng thái hệ thống** | ✅ Đã triển khai |
-| **Cập nhật** | 2026-11-13 |
+:::note[Phân biệt hai đường gọi agent]
+
+MCP server có tool `call_agent` nhưng đó là **agent tĩnh** (ví dụ `spec` — soạn tài liệu thiết kế):
+không thay được workflow. Worker thật (coder, reviewer…) chỉ chạy **qua workflow** theo `role`
+khai trong spec. Muốn chạy việc → đi đủ 4 bước dưới đây, đừng gọi worker trực tiếp.
 
 :::
 
-Cả 4 bước làm được qua 2 đường: **MCP** (nói chuyện với agent orchestrator bằng ngôn ngữ tự nhiên)
-hoặc **REST API** (gọi trực tiếp). Bảng tool đầy đủ: [MCP Tools](/docs/reference/mcp-tools) ·
-[API REST](/docs/reference/api-rest).
-
 ## 1 · Configure — định nghĩa workflow
 
-Workflow = spec (DAG các node) + agents (persona theo role). Viết spec trong factory repo rồi
-sync, hoặc configure qua MCP:
+Workflow = spec (DAG các node) + agents (persona theo role). Orchestrator gọi MCP, người vận hành
+gọi REST:
 
 ```
 configure_workflow(
   name: "<ten-workflow>",
-  spec: "<yaml Kestra-style — nodes, brief, review...>",
-  agents: { "<role>": "<persona-tom-tat>" }
+  spec: "<yaml Kestra-style — tasks:, brief inline trong từng task>",
+  agents: { "<role>.md": "<frontmatter + system prompt>" }
 )
 ```
 
-Cú pháp spec chi tiết: [Spec DSL](/docs/reference/spec-dsl) ·
-Nguyên tắc viết: [Viết workflow spec](/docs/developer-docs/viet-workflow-spec).
+Điều gì xảy ra: **validate fail-loud → ghi `workflows/<name>.spec.yaml` + `agents/*.md` vào factory
+repo → git commit + push → sync đăng ký vào chỉ mục**. Trả về **`version` + `sha`** của commit —
+run sau đó gắn với đúng SHA này, truy ngược được phiên bản spec đã chạy. Kiểm tra đã đăng ký:
+`list_workflows()` (tên + version + sha) · `get_workflow(name)` (flow JSON các node + vị trí).
+
+Cú pháp spec: [Spec DSL](/docs/reference/spec-dsl) · Nguyên tắc viết:
+[Viết workflow spec](/docs/developer-docs/viet-workflow-spec).
 
 ## 2 · Run — khởi động run
 
@@ -44,33 +46,65 @@ Nguyên tắc viết: [Viết workflow spec](/docs/developer-docs/viet-workflow-
 run_workflow(name: "<ten-workflow>", fresh: true)
 ```
 
-- `fresh=true` — bỏ trạng thái cũ, chạy lại từ đầu.
-- Hệ thống trả `job_id` — dùng job_id cho mọi bước sau.
-- DAG chạy theo **wave**; node có gate sẽ dừng chờ duyệt.
+- Hệ thống trả **`job_id`** (+ `wf_version`, `sha`) — dùng job_id cho mọi bước sau. Run chạy nền.
+- `fresh=true` — reset contract các node về `PENDING`, chạy lại **sạch** không adopt kết quả cũ
+  (dùng sau khi đã sửa spec).
+- `resume=true` (REST) — **tái sử dụng node đã terminal** của job cũ: scan contract, node xong rồi
+  không chạy lại agent (tiết kiệm token + thời gian).
+- `context` (REST) — input lúc chạy (`lifecycle_id`, `spec_link`, `repo`…) chèn vào brief qua
+  placeholder `{{ctx.<key>}}` — không phải sửa spec.
+- DAG chạy theo **wave**; node có review/gate sẽ dừng chờ duyệt đúng chỗ khai trong spec.
 
 ## 3 · Quan sát — theo dõi tiến độ
 
 | Cần xem | Qua MCP | Qua REST/Dashboard |
 |---|---|---|
-| Trạng thái run | `get_run(job_id)` | tab **Runs** |
-| Kết quả từng node | `get_report(job_id)` | tab **Runs** → job |
-| Tiến độ thời gian thực | — | SSE `GET /api/v1/events/stream/{run_id}` · tab **Runs** |
-| Toàn bộ run | `list_runs` | tab **Runs** |
+| Trạng thái run + events | `get_run(job_id)` | tab **Runs** |
+| Sản phẩm từng node | `get_report(job_id)` | tab **Runs** → job |
+| Toàn bộ run gần đây | `list_runs()` | tab **Runs** |
+| Workflow đã đăng ký | `list_workflows()` · `get_workflow(name)` | tab **Factory** |
+| Tiến độ thời gian thực | — | SSE `GET /api/v1/events/stream/{job_id}` · tab **Runs** (Gantt) |
+| Điểm đang chờ duyệt | — | `GET .../approvals` · tab **Duyệt** |
 
-Giải thích trạng thái: [Trạng thái](/docs/reference/trang-thai).
+`get_report` trả cho **từng node**: status, số attempts, session id và **tin nhắn cuối của agent**
+(báo cáo theo format Status/commits/test/concerns) — đây là thứ để *review chất lượng*, không chỉ
+nhìn chữ `DONE`. Giải thích trạng thái: [Trạng thái](/docs/reference/trang-thai).
 
 ## 4 · Review — duyệt HITL
 
-Khi node `need_review: human` tới lượt, run tạm dừng và **card duyệt** hiện ở tab **Duyệt**:
+Khi node `need_review: human` tới lượt (hoặc reviewer/kỳ vọng hỏi người), sự kiện
+`approval_requested` xuất hiện và **card duyệt** hiện ở tab **Duyệt**:
 
-- Đọc brief, diff và bằng chứng kèm theo.
-- Chấp nhận / từ chối **kèm lý do** — lý do được ghi vào log trung lập.
-- Sau khi duyệt, run tiếp tục wave kế tiếp.
+- Đọc brief, report, bằng chứng kèm theo (tiêu chí review nằm trên card).
+- Chấp nhận / từ chối **kèm lý do** — quyết định bất biến, ghi `by` (human/delegate) vào log
+  trung lập; trả lời qua `POST .../approvals/{event_id}/answer`.
+- Card treo quá 48h không ai trả lời bị dọn (từ chối) — không treo vĩnh viễn.
 
-Chi tiết tab duyệt: [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard).
+Khi node `need_review: agent`, reviewer là session reviewer độc lập — người vẫn thấy vòng
+review qua events (`node_review_pending/done`) và có thể xử lý khi review bị vượt trần.
+
+## Điều khiển giữa chừng
+
+| Thao tác | MCP | REST |
+|---|---|---|
+| Tạm dừng (giữ checkpoint) | `pause_run(job_id, "PAUSE")` | `POST .../signal` `{"action":"PAUSE"}` |
+| Dừng hẳn | `pause_run(job_id, "STOP")` | `POST .../signal` `{"action":"STOP"}` |
+| Chạy tiếp từ checkpoint | `resume_run(job_id)` | `POST .../resume` |
+
+PAUSE dừng ở ranh giới giữa các bước chạy — node đang chạy hoàn tất tới checkpoint. Node đã xong
+không chạy lại khi resume. Cơ chế: [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi).
 
 ## Kết quả đúng phải thấy
 
-- `get_report(job_id)` cho thấy mọi node ở trạng thái terminal, node được duyệt có ghi nhận
-  người duyệt + lý do.
+- `get_run(job_id)` → `completed`; `get_report(job_id)` cho thấy mọi node ở trạng thái terminal,
+  node được duyệt có ghi nhận người duyệt + lý do.
 - Trên Gitea có PR từ nhánh agent — **chưa được merge** cho tới khi người duyệt gộp.
+- `git log` factory repo có commit `configure_workflow: <name>` — spec thay đổi luôn đi qua Git.
+
+## Ví dụ — một câu cho agent orchestrator
+
+```text
+Dùng MCP workloop-factory: configure_workflow tạo workflow 'hello2' với 1 node hello
+(type WorkloopTask, role coder, brief: viết reports/hello.md 1 dòng 'hello world').
+run_workflow('hello2', fresh=true), poll get_run tới completed rồi get_report.
+```

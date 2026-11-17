@@ -1,0 +1,100 @@
+---
+title: Cổng duyệt & HITL
+description: Ba chốt đỏ — đặc tả, mã nguồn, sản phẩm; vòng review lặp và hàng đợi duyệt người.
+sidebar_position: 5
+---
+
+# Cổng duyệt & HITL — ba chốt đỏ
+
+Hệ thống tự nhận biết khi nào cần bàn giao tiếp cho agent, khi nào **kích hoạt tạm dừng để gọi
+người can thiệp** tại 3 điểm chốt đỏ: **đặc tả — mã nguồn — sản phẩm**. Mỗi chốt một cơ chế, một
+điểm chung: **người đề xuất không tự duyệt** và quyết định được ghi vào log trung lập.
+
+## ① Chốt đặc tả — cổng PR spec
+
+Thay đổi spec trong quy trình có kiểm soát đi qua `/api/v1/spec-pr`:
+
+```
+propose (author, spec mới, title) → approve (min_approvals, cấm tự duyệt) → merge (ghi file + commit)
+```
+
+- **Cấm push thẳng** spec trong quy trình có duyệt; merge chỉ xảy ra khi đủ ngưỡng duyệt.
+- Cơ chế cấm tự duyệt ở mức module (`allow_self_approval=false`) — không phụ thuộc người dùng tự
+  giác.
+- Đầy đủ audit trail: danh sách PR spec + log duyệt.
+
+## ② Chốt mã nguồn — node review
+
+Node khai `need_review` để mở cổng sau khi nó xong:
+
+| Chế độ | Cơ chế |
+|---|---|
+| `none` | Không review — chỉ chạy tiếp |
+| `agent` | Session **reviewer** duyệt: đọc report + bằng chứng, trả phán quyết dòng đầu `APPROVED` / `CHANGES_REQUESTED: <lý do>`; không kết luận rõ → **fail-closed** (chặn) |
+| `human` | Nộp vào **hàng đợi duyệt** (HITL) — chờ người ra quyết định |
+
+**ReviewNode — cổng review là node riêng trên graph:**
+
+```mermaid
+flowchart LR
+    N["Node bị review"] -->|report| G{{"ReviewNode<br/>max_rounds = 2"}}
+    G -->|approved| X["Node kế tiếp"]
+    G -.->|"changes_requested<br/>(cạnh ngược)"| N
+    G -->|"vượt trần / timeout"| B["BLOCKED + leo thang người"]
+```
+
+Điểm thiết kế quan trọng:
+
+- **Cạnh ngược chạy thật**: chưa đạt → engine **resume đúng session đã dừng** của node bị review,
+  gửi feedback của reviewer (kèm yêu cầu cập nhật report ghi mục "Fix report vòng N") — node sửa
+  trong context cũ chứ không làm lại từ đầu.
+- **Chuỗi giữa cũng chạy lại**: nếu giữa node bị review và gate còn node khác, chúng được chạy lại
+  theo thứ tự topo — đầu vào của chúng đã đổi.
+- **Bộ đếm vòng do ENGINE giữ** (`max_rounds`, mặc định 2) — không tin agent tự khai. Vượt trần
+  hoặc hết giờ chờ người → `BLOCKED` + leo thang; lối `approved` trả SKIP marker → **nhánh xuống
+  không chạy** (fail-closed).
+- **Reviewer là session mới mỗi vòng** (nguyên tắc maker-checker — người review vòng sau không
+  mang định kiến vòng trước); reviewer được truyền tiêu chí + skill + **toàn bộ input của gate**
+  làm bằng chứng.
+- Lineage đầy đủ trong event trail: `node_review_rejected` (lý do) → `node_review_pending` (vòng
+  N) → `node_review_done` / `node_review_exhausted`.
+
+## Hàng đợi duyệt người (ApprovalQueue)
+
+| Tính chất | Giá trị |
+|---|---|
+| Vòng đời record | `pending → approved → spawned` hoặc `pending → rejected` |
+| Quyết định | **Bất biến** — đã approved/rejected không đổi |
+| Một lần | Payload chỉ rời hàng đợi qua `take_approved()` — đúng một lần |
+| Trùng lặp | `dedup_key` — hai request chờ cho cùng một việc là lỗi |
+| TTL | 48h không ai trả lời → swept thành rejected — không treo badge duyệt vĩnh viễn |
+
+**Đường HITL trong run** — supervisor poll gateway mỗi ~10s:
+
+1. Agent/gateway hỏi người (approval/question/permission) → event `approval_requested`
+   (`event_id`, `kind`, `summary`).
+2. Người (hoặc delegate được ủy quyền) trả lời qua `POST /monitor/jobs/{id}/approvals/{event_id}/answer`
+   với `decision` + `by: human | delegate:<id>` — ghi vào `approval_answered` để audit.
+3. Backend chỉ **trung chuyển** — không tự trả lời thay người; run kết thúc thì endpoint trả 409
+   (không còn gateway sống để trả lời).
+
+## ③ Chốt sản phẩm — lifecycle duyệt
+
+Vòng đời sản phẩm theo dõi qua `/api/v1/lifecycle` (tạo idempotent theo trigger — ví dụ Slack
+thread): tài liệu spec (đăng ký + **duyệt**) → PR triển khai (`record_pr` + `review`) — đủ điều
+kiện trước khi vòng được coi là kết thúc. Đây là chốt dùng cho quy trình nhiều agent — như agent
+`spec` soạn tài liệu lên Confluence, người duyệt trang rồi workflow triển khai mới được phép chạy.
+
+## Duyệt từ đâu
+
+- **Dashboard** — tab **Duyệt**: card kèm brief, sản phẩm, bằng chứng, tiêu chí →
+  [Giao diện dashboard](/docs/user-guides/workloop-dieu-phoi/giao-dien-dashboard).
+- **REST** — [API REST](/docs/reference/api-rest) (approvals, spec-pr, lifecycle, reviews).
+- MCP không có tool "duyệt" — quyết định thuộc **người**, agent orchestrator không tự gật thay
+  (ai đề xuất thì người khác duyệt).
+
+## Liên kết
+
+- Vai trò & quyền theo luồng duyệt: [Phân quyền tài khoản](/docs/admin-operations/phan-quyen-tai-khoan)
+- Review không đạt trong runbook: [RB-02 · Node BLOCKED](/docs/admin-operations/runbook-su-co)
+- Vì sao có 3 chốt: [Năm câu hỏi](/docs/fundamentals/nam-cau-hoi)

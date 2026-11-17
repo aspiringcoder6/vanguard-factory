@@ -22,14 +22,20 @@ Lợi ích kép: **tiết kiệm chi phí** (không chạy lại phần đã xon
 
 - **Checkpoint theo trạng thái** — node có trạng thái lưu trước khi hành động; khôi phục đọc lại
   trạng thái, không suy đoán. Xem [Trạng thái](/docs/reference/trang-thai).
-- **Stall → re-arm** — khi phiên không tiến triển, vòng điều khiển chung re-arm phiên mới (không
-  mang hội thoại cũ, mang lỗi gần nhất) với giới hạn `max_rearms`; hết lượt → `REARM_EXHAUSTED`.
-  Chi tiết cơ chế: [SDK & Gateway](/docs/developer-docs/sdk-gateway).
+- **Stall → re-arm** — khi phiên không tiến triển, vòng điều khiển chung re-arm **tái sử dụng
+  phiên cũ** (giữ context đã làm chủ, không đọc lại brief từ đầu) với giới hạn `max_rearms`; hết
+  lượt → `REARM_EXHAUSTED`. Chi tiết cơ chế:
+  [Chịu lỗi & phục hồi](/docs/architecture/tang-2-workflow/chiu-loi-phuc-hoi).
 - **PAUSE ở ranh giới wave** — dừng chủ động cũng phục hồi theo cùng nguyên tắc: resume từ
   checkpoint, node đã xong không chạy lại.
 - **Bằng chứng bất biến** — bằng chứng đã lưu không được sinh lại; nếu thiếu thì trạng thái quay về
   "chưa kiểm chứng" ([Kiểm chứng độc lập](/docs/architecture/kiem-chung-phuc-hoi/kiem-chung-doc-lap)).
 
-:::info Vận hành
-Thủ tục khôi phục sau sự cố thực tế: [Sao lưu & phục hồi](/docs/admin-operations/sao-luu-phuc-hoi).
+:::info[Vận hành]
+
+Cơ chế phục hồi mô tả ở trên là hành vi của hệ thống lúc chạy. Khi có sự cố thực tế, làm theo
+checklist từng bước: [Sao lưu & phục hồi](/docs/admin-operations/sao-luu-phuc-hoi); lỗi thường gặp
+theo triệu chứng: [Xử cố Workloop](/docs/user-guides/workloop-dieu-phoi/xu-co) ·
+[Runbook sự cố](/docs/admin-operations/runbook-su-co).
+
 :::

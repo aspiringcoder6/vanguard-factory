@@ -5,23 +5,20 @@ sidebar_position: 4
 sidebar_label: Vòng đời công việc
 ---
 
+import AdlcVongDoi from '@site/static/img/adlc-vong-doi.png';
+
 # Vòng đời ADLC: các trạm và cổng duyệt
 
 Mọi đầu việc đi qua các trạm sau; **kết quả giám sát (Monitor) quay về đầu vòng**,
 trở thành yêu cầu mới — đây là vòng ADLC cloud-native:
 
-```mermaid
-flowchart LR
-    TRI["Triage — phân loại & ưu tiên"] --> SPEC["Spec — đặc tả kỹ thuật"]
-    SPEC --> IMP["Implement — viết mã nguồn"]
-    IMP --> VER["Verify — kiểm thử / xác minh"]
-    VER --> SHIP["Ship — phát hành"]
-    SHIP --> MON["Monitor — giám sát hệ thống"]
-    MON -. "kết quả giám sát trở thành yêu cầu mới" .-> TRI
-    G1{{"① Người duyệt đặc tả"}} -.-> SPEC
-    G2{{"② Người duyệt mã nguồn"}} -.-> VER
-    G3{{"③ Nghiệm thu sản phẩm"}} -.-> SHIP
-```
+<figure className="diagram-figure">
+  <img src={AdlcVongDoi} alt="Vòng đời ADLC: Triage → Spec → Implement → Verify → Ship → Monitor, ba cổng duyệt của con người" loading="lazy" />
+  <figcaption>
+    Vòng ADLC cloud-native — kết quả Monitor quay về đầu vòng thành yêu cầu mới;
+    ba cổng đỏ là nơi con người quyết định.
+  </figcaption>
+</figure>
 
 | Trạm | Agent làm | Con người làm |
 |---|---|---|
@@ -36,5 +33,5 @@ flowchart LR
 
 Cả ba trạm có con người đứng giữa đều cùng một nguyên tắc: **agent đề xuất — hệ thống và con
 người quyết định**. Cơ chế cụ thể từng cổng trong hệ thống được mô tả ở
-[Tầng 2 · Workflow](/docs/architecture/tang-2-workflow) và
+[Tầng 2 · Workflow](/docs/architecture/tang-2-workflow/tong-quan) và
 [Kiểm chứng độc lập](/docs/architecture/kiem-chung-phuc-hoi/kiem-chung-doc-lap).

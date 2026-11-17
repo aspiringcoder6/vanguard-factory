@@ -31,6 +31,7 @@ Chi tiết endpoint: [API REST](/docs/reference/api-rest) · nền tảng traces
 | `401` từ harness | > 0 trong 5 phút | token DSH đổi sau restart → [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co) |
 | Node `REARM_EXHAUSTED` | bất kỳ | brief/ngân sách không đủ → xem report node |
 | Run kẹt `in_progress` | > timeout cấu hình | harness/broker chết → runbook |
+| Run kẹt `suspended` | > 24h không ai quyết | chờ duyệt không người xử → [RB-08](/docs/admin-operations/runbook-su-co) |
 | Tỷ lệ BLOCKED | tăng so với baseline | spec thiếu thông tin → xem lại quy trình spec |
 | Chi phí token/job | vượt ngân sách | xem breakdown theo model trên Phoenix |
 | Sync factory lỗi | bất kỳ | Git/cred lỗi → runbook |

@@ -6,7 +6,21 @@ sidebar_position: 3
 
 # TestForge AI — kiểm chứng độc lập
 
-> Sơ đồ gốc nằm trong slide TestForge — xuất hình vào `static/img/02-architecture/` khi có.
+```mermaid
+flowchart LR
+    subgraph TF["TestForge — quan sát viên bên ngoài"]
+        direction TB
+        A1["Agent 1 · Functional<br/>yêu cầu → kịch bản → bằng chứng thực thi<br/>(Playwright headless trong sandbox)"]
+        A2["Agent 2 · Performance<br/>trace/OpenAPI → workload k6<br/>(p50/p95/p99 · tỷ lệ lỗi · throughput)"]
+        A3["Agent 3 · Recommendation<br/>nguyên nhân khả dĩ + khuyến nghị<br/>+ kế hoạch xác minh"]
+    end
+    A1 --> E["Bằng chứng theo mã job<br/>script · ảnh · trace · video · log · báo cáo k6"]
+    A2 --> E
+    A2 --> A3
+    E --> G{"Promotion gate — step_coverage ·<br/>oracle_from_contract · replay_pass · video_evidence"}
+    G -->|"PASS / HEALED_PASS"| R["Vào bộ test chuẩn (regression)"]
+    G -->|"FAIL / ERROR / PARTIAL"| X["Không vào regression"]
+```
 
 ## Vai trò: quan sát viên bên ngoài
 
@@ -24,14 +38,12 @@ trong quyền sửa của agent thực thi. TestForge đồng hành xuyên suố
 
 ## Ba agent
 
-```
-Agent 1 · Functional   — Yêu cầu → kịch bản → bằng chứng thực thi (Playwright headless,
-                         trong Sandbox; khám phá UI thật để tạo locator/trace)
-Agent 2 · Performance  — Trace/OpenAPI → workload k6 → chạy tải → đánh giá ngưỡng
-                         (p50/p95/p99, tỷ lệ lỗi, throughput)
-Agent 3 · Recommendation — Kết quả Agent 2 → nguyên nhân khả dĩ + khuyến nghị + kế hoạch
-                         xác minh (LLM phân tích; Dev kiểm chứng trước khi kết luận)
-```
+- **Agent 1 · Functional** — yêu cầu → kịch bản → bằng chứng thực thi (Playwright headless trong
+  Sandbox; khám phá UI thật để tạo locator/trace).
+- **Agent 2 · Performance** — trace/OpenAPI → workload k6 → chạy tải → đánh giá ngưỡng
+  (p50/p95/p99, tỷ lệ lỗi, throughput).
+- **Agent 3 · Recommendation** — kết quả Agent 2 → nguyên nhân khả dĩ + khuyến nghị + kế hoạch xác
+  minh (LLM phân tích; Dev kiểm chứng trước khi kết luận).
 
 Kết quả hiệu năng phân loại **PASS / PASS_WITH_WARNING / FAIL** theo target và biên chấp nhận;
 khuyến nghị tối ưu **không tự sửa mã nghiệp vụ** — luôn có bước xác minh tiếp theo.
@@ -53,6 +65,10 @@ và được duyệt mới đưa vào regression.
 Mỗi lần chạy lưu theo mã job: **script, ảnh, trace, video, log, báo cáo k6** — nằm ngoài phiên
 sandbox để dùng cho hồi quy và đối chiếu.
 
-:::info Hướng dẫn sử dụng
-Đầu vào, quy trình 4 bước, thẩm định kết quả: [HDSD TestForge](/docs/user-guides/testforge/gioi-thieu).
+:::info[Hướng dẫn sử dụng]
+
+Trang này trả lời TestForge **là gì và vì sao đáng tin**; phần vận hành — chuẩn bị đầu vào (yêu cầu,
+contract đã duyệt), quy trình 4 bước và cách thẩm định từng loại bằng chứng trước khi tin kết quả
+PASS — nằm ở [HDSD TestForge](/docs/user-guides/testforge/gioi-thieu).
+
 :::

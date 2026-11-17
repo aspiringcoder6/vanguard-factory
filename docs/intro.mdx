@@ -7,18 +7,27 @@ slug: /
 
 # ADLC — Agentic Development Lifecycle
 
-**ADLC** là hệ thống multi-agent hỗ trợ phát triển phần mềm theo nguyên tắc:
-**agent làm phần nặng, con người đứng ở 3 điểm duyệt** (① đặc tả — ② mã nguồn — ③ sản phẩm).
+**ADLC (Agentic Development Lifecycle)** là hệ thống multi-agent hỗ trợ phát triển phần mềm: agent
+tự chạy trọn vòng đời công việc — nhận yêu cầu, lập kế hoạch, viết code, kiểm thử, bàn giao — trong
+khi con người chỉ giữ quyền quyết ở **ba cổng duyệt**: ① đặc tả — ② mã nguồn — ③ sản phẩm.
+
+Nguyên tắc thiết kế cốt lõi: **tách điều phối khỏi thực thi**. Nhiều agent chuyên biệt (research,
+coding, data, writing…) phối hợp với nhau qua một **orchestrator**; mỗi agent được một **harness**
+trang bị đủ ngữ cảnh, bộ nhớ và công cụ để tự hoàn thành nhiệm vụ; mọi hành động thật chạy trong
+**sandbox** cô lập. Vì sao thiết kế như vậy:
+[Triết lý thiết kế](/docs/fundamentals/triet-ly) ·
+[AI Agent & Multi-Agent System](/docs/fundamentals/triet-ly/ai-agent-multi-agent#hai-năng-lực-phối-hợp-harness-vs-orchestrator).
+
 Hệ thống gồm 4 tầng:
 
-| Tầng | Vai trò |
-|---|---|
-| **1 · Interface** | Nguồn công việc: IDE, Git, CI/CD, chatbot, Jira/ticketing |
-| **2 · Workflow** | Control plane: state machine vòng đời task, factory registry, các cổng duyệt |
-| **3 · Harness** | Agent core, công cụ & tri thức: task loop, memory, kiểm thử, vault |
-| **4 · Sandbox** | Môi trường thực thi cô lập: broker, VFS service, OpenSandbox lifecycle server |
+| Tầng | Vai trò | Chi tiết |
+|---|---|---|
+| **1 · Interface** | Nguồn công việc: IDE, Git, CI/CD, chatbot, Jira/ticketing | [Tầng 1](/docs/architecture/tang-1-interface) |
+| **2 · Workflow** | Control plane: state machine vòng đời task, factory registry, các cổng duyệt | [Tầng 2](/docs/architecture/tang-2-workflow/tong-quan) |
+| **3 · Harness** | Agent core, công cụ & tri thức: task loop, memory, kiểm thử, vault | [Tầng 3](/docs/architecture/tang-3-harness/tong-quan-harness) |
+| **4 · Sandbox** | Môi trường thực thi cô lập: broker, VFS service, OpenSandbox lifecycle server | [Tầng 4](/docs/architecture/tang-4-sandbox/tong-quan) |
 
-:::note Lưu ý về bảo mật tài liệu
+:::note[Lưu ý về bảo mật tài liệu]
 Tài liệu này mô tả kiến trúc và cách vận hành ở mức thiết kế. **Không đưa vào docs**: token,
 mật khẩu, URL nội bộ thật, đường dẫn máy thật, hay nội dung chi tiết của factory repo
 (workflow/agent cụ thể) — đó là tài sản riêng của từng nhóm. Secret chỉ được nhắc qua **tên biến
@@ -72,8 +81,3 @@ môi trường** hoặc **tên ref** trong vault.
 
 Các trang chung (01, 02, 04) do nhóm điều phối đứng mũi, nội dung góp ý theo PR từ từng mảng.
 
-## Ghi công
-
-- Người hướng dẫn: **Trần Tuấn Anh**
-- Người thực hiện: **Ninh Minh Hiếu · Lê Trung Hiếu · Phạm Thị Hoài Thu · Kiều Minh Phước**
-- TestForge AI: **Nguyễn Hữu Quân** · Sandbox Kit: **Nguyễn Trung Kiên**

@@ -58,3 +58,13 @@ thành phần lỗi: [Phụ thuộc & sức khỏe](/docs/admin-operations/monit
 - **Chẩn đoán:** nguồn ngoài có retry không; log backend nhận webhook; cấu hình tunnel/firewall.
 - **Xử lý:** sửa cấu hình, yêu cầu nguồn gửi lại; đối chiếu audit log.
 - **Phòng ngừa:** kiểm tra webhook sau mỗi lần đổi mạng/tunnel.
+
+## RB-08 · Run treo `suspended` (PAUSE/chờ duyệt không ai xử lý)
+
+- **Chẩn đoán:** `GET /api/v1/monitor/jobs/{id}` — trạng thái `suspended`; xem event `job_paused`
+  (checkpoint) và `approval_requested` còn thiếu `approval_answered`.
+- **Xử lý:** chờ duyệt → trả lời card ở tab **Duyệt** hoặc `POST .../approvals/{event_id}/answer`
+  rồi `resume`; PAUSE chủ động → `POST .../resume`. Run đã kết thúc mà vẫn còn card → chạy lại với
+  `resume` (node đã xong không chạy lại).
+- **Phòng ngừa:** gán người duyệt cho từng loại gate; approval có TTL 48h tự dọn, nhưng đừng để
+  tới lúc đó — cơ chế: [Cổng duyệt & HITL](/docs/architecture/tang-2-workflow/cong-duyet-hitl).

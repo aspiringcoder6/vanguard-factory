@@ -1,0 +1,90 @@
+---
+title: Chịu lỗi & phục hồi
+description: Re-arm phiên, taxonomy lỗi, PAUSE/RESUME checkpoint và resume node-level.
+sidebar_position: 6
+---
+
+# Chịu lỗi & phục hồi
+
+**Node chết ≠ run chết.** Một run có thể kéo dài hàng giờ với hàng chục session agent; phiên rớt,
+provider rate-limit, người duyệt vắng mặt — đều là chuyện bình thường. Cơ chế chịu lỗi xếp thành
+**3 tầng**, mỗi tầng xử lý đúng loại hỏng hóc của mình:
+
+| Tầng | Xử lý gì | Cơ chế |
+|---|---|---|
+| 1 · RPC | Lỗi gọi API lẻ tẻ | Retry idempotent 3×; `session/prompt` **không retry** (tránh prompt kép — submit fail phải ra tầng 2); 401 → reauth một lần |
+| 2 · ReArmControlLoop | Phiên chết/stall giữa task | Vòng điều khiển chung (Template Method) — re-arm có bookkeeping |
+| 3 · Contract | Node kết thúc xấu | Terminal `BLOCKED`/`NEEDS_CONTEXT` — **tách escalation khỏi logic run** |
+
+## ReArmControlLoop — vòng chịu lỗi chung
+
+Gateway cụ thể (DSH, OpenCode…) chỉ cài **4 hook** — `_open_session` / `_submit` / `_poll` /
+`_kill`; chính sách chung nằm ở một chỗ:
+
+```
+mỗi attempt (tối đa max_rearms + 1):
+  open session (TÁI SỬ DỤNG session cũ nếu còn) → submit → poll
+  ├─ stalled / timeout → re-arm: giữ session, attempt kế
+  ├─ submit fail       → kill session + ghi SUBMIT_FAILED, mở session mới
+  ├─ vượt token_budget → kill + ghi BUDGET_EXCEEDED
+  └─ terminal          → đóng gói Contract (status + report + errors taxonomy)
+```
+
+Điểm quan trọng: **re-arm tái sử dụng session cũ** — agent tiếp tục đúng context đã làm chủ thay
+vì mở session mới, đọc lại brief từ đầu rồi stall lại như cũ (hỏng thật đã gặp: 7 session mới
+liên tiếp vô ích). Số lần thử được ghi vào `contract.attempts`.
+
+## Taxonomy lỗi — quyết định theo mã, không đoán theo chữ
+
+Mọi lỗi native của harness/provider được `classify_error` map về **mã chuẩn** — engine và
+`retry_policy` chỉ đọc mã:
+
+| Mã | Ý nghĩa | Chính sách mặc định |
+|---|---|---|
+| `AUTH` / `MISSING_CREDENTIAL` | sai/thiếu credential | **abort** — retry không có nghĩa |
+| `INVALID_INPUT` | schema/đối số sai | **abort** |
+| `CONTRACT_CONFLICT` | 409 — task đã tồn tại | **skip** (idempotent resume: đón tiếp contract cũ) |
+| `RATE_LIMIT` / `PROVIDER_5XX` | 429 / 502-504 | **backoff** |
+| `TIMEOUT` / `NETWORK` / `BUDGET_EXCEEDED` / `UNKNOWN` | hết giờ · mạng · vượt ngân sách · không phân loại | **re-arm** |
+
+Node không tự set terminal sau khi kết thúc → chờ 1 nhịp rồi đọc lại; vẫn không →
+`DONE_WITH_CONCERNS` + event `node_status_unclear` (fail-closed **có báo cáo**).
+
+## PAUSE / STOP — signal có xác nhận
+
+- Gửi qua `POST /monitor/jobs/{id}/signal` (`PAUSE` | `STOP`) — ghi vào bảng `signals` với cờ
+  `consumed`.
+- Engine gọi **pause probe** ở ranh giới giữa các bước chạy: probe **tiêu thụ** signal (đánh dấu
+  consumed — không dừng hai lần): `STOP` → cancel run; `PAUSE` → engine ném `GraphPausedException`
+  → **checkpoint** chụp toàn bộ trạng thái graph (node nào đã build, decision đã chọn) vào
+  `SqliteCheckpointStore`, job chuyển `suspended` + event `job_paused`.
+- `POST /monitor/jobs/{id}/resume` (chỉ khi `suspended`) → **restore graph từ checkpoint** — node
+  đã xong không chạy lại; event `run_resumed`.
+
+## Resume node-level — tái sử dụng kết quả giữa các run
+
+Ngoài resume-from-checkpoint (cùng job), chạy lại *sau khi đã sửa* tận dụng được node đã xong của
+job cũ:
+
+- `run` với `resume: true` (tùy chọn `resume_from: <job_id>` — thiếu thì tự chọn job mới nhất cùng
+  workflow đã có tiến độ).
+- Runner **scan contract terminal** của job nguồn (đọc thư mục `taskloop/` trong workspace, hoặc
+  qua API khi khác host) → `resume_map`: node nào đã `DONE`/`DONE_WITH_CONCERNS`.
+- Node nằm trong map → **không mở session agent**, tái sử dụng kết quả từ contract; event
+  `job_resumed` ghi `reused_nodes`; kết quả ghi `attempts: "reused"`.
+- Ngược lại `fresh: true` → **reset contract về PENDING** trước khi chạy — chạy lại sạch, không
+  adopt kết quả cũ (dùng sau khi đã sửa spec).
+
+## Dọn dẹp — không để agent mồ côi
+
+Job kết thúc (dù cách nào) → `finally`: hủy **mọi session agent còn sống** mà gateway đã tạo
+(`close_all`). Không còn cảnh backend/job chết mà session ngầm tiếp tục chạy đốt token; session
+idle là no-op nên an toàn khi gọi thừa.
+
+## Liên kết
+
+- Nguyên tắc đối chiếu trạng thái khi gián đoạn:
+  [Phục hồi gián đoạn](/docs/architecture/kiem-chung-phuc-hoi/phuc-hoi-gian-doan)
+- Lớp gateway & SDK: [SDK & Gateway](/docs/developer-docs/sdk-gateway)
+- Sự cố thực tế: [Xử cố](/docs/user-guides/workloop-dieu-phoi/xu-co) ·
+  [Runbook](/docs/admin-operations/runbook-su-co)
