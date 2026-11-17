@@ -10,27 +10,13 @@ sidebar_position: 3
 
 Hệ thống tách bạch hai năng lực thay vì gộp vào một agent khổng lồ:
 
-```mermaid
-flowchart TB
-    subgraph HARNESS["AI AGENT HARNESS — năng lực của một agent"]
-        H1[MEMORY] --- H2[CONTEXT] --- H3[TOOLS]
-        H4[HARNESS] --> H5[AI AGENT]
-        H5 --> H6["EXECUTE · RECOVER · OBSERVE"]
-    end
-    subgraph ORCH["AGENT ORCHESTRATION — phối hợp nhiều năng lực"]
-        O1[ORCHESTRATOR]
-        O2[RESEARCH AGENT]
-        O3[CODING AGENT]
-        O4[DATA AGENT]
-        O5[WRITING AGENT]
-        O1 --> O2
-        O1 --> O3
-        O1 --> O4
-        O1 --> O5
-    end
-    H5 -- "Task routing" --> O1
-    O1 -- "Human approval" --> NGUOI((Con người))
-```
+<figure className="diagram-figure">
+  <img src="/img/adlc-kien-truc-nen-tang.png" alt="Kiến trúc nền tảng ADLC: Workflow điều phối, Harness gắn năng lực, Sandbox cô lập thực thi" loading="lazy" />
+  <figcaption>
+    Tách điều phối khỏi thực thi: WORKFLOW giữ trạng thái task &amp; cổng duyệt ·
+    HARNESS gắn năng lực cho agent · SANDBOX cô lập môi trường chạy thật.
+  </figcaption>
+</figure>
 
 ## Ba điểm con người duyệt
 
