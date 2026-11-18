@@ -1,32 +1,56 @@
 ---
 title: Agent Memory (Cognee) — hướng dẫn sử dụng
-description: Nạp tài liệu, truy vấn ngữ cảnh dự án qua MCP.
+description: Bộ nhớ tri thức dự án cho agent — nạp tài liệu, truy vấn ngữ cảnh qua MCP.
 sidebar_position: 1
+sidebar_label: Memory – HDSD
 ---
 
 # Agent Memory (Cognee) — hướng dẫn sử dụng
 
-Memory cung cấp ngữ cảnh dự án cho agent qua giao diện MCP với ba kho (relational / graph /
-vector). Kiến trúc: [Agent Memory](/docs/architecture/tang-3-harness/cognee-agent-memory).
+Agent Memory là **bộ nhớ tri thức dùng chung của dự án**. Người ta đưa tài liệu (yêu cầu, thiết kế,
+quy trình) và mã nguồn vào một nơi; hệ thống đọc, nối các mối liên hệ giữa chúng và ghi nhớ. Từ đó,
+mỗi khi agent nhận việc, nó **tra cứu bộ nhớ này thay vì phải đọc lại toàn bộ hồ sơ**.
 
-## Khái niệm chính
+Bộ nhớ gồm **ba kho, mỗi kho đảm nhiệm một việc**:
 
-| Khái niệm | Ý nghĩa |
+| Kho | Việc của kho | Ví dụ câu hỏi agent hỏi được |
+|---|---|---|
+| **Kho hồ sơ** (relational) | Lưu dữ liệu có cấu trúc: tài liệu, nguồn gốc | "Tài liệu này thuộc dự án nào, phiên bản nào?" |
+| **Kho liên hệ** (graph) | Nối quan hệ giữa các thông tin | "Chức năng X dựa trên yêu cầu nào, sửa ảnh hưởng phần nào?" |
+| **Kho tìm kiếm theo ý nghĩa** (vector) | Tìm theo nội dung, không cần đúng từ khóa | "Quy định về phân quyền ở tài liệu nào?" |
+
+Agent làm việc với bộ nhớ qua **cổng giao tiếp MCP** — cùng một cách mà agent dùng để gọi công cụ,
+nên không cần học cách kết nối mới. Cả ba kho và mô hình AI đều **thay đổi được qua cấu hình**
+(SQLite ↔ PostgreSQL, Kuzu ↔ Neo4j, LanceDB ↔ pgvector; GLM ↔ OpenAI, Azure, Ollama) mà quy trình
+nạp – tra cứu giữ nguyên: [kiến trúc chi tiết](/docs/architecture/tang-3-harness/cognee-agent-memory).
+
+## Khi nào dùng Memory, khi nào không
+
+| Dùng Memory | Không dùng Memory |
 |---|---|
-| **Nạp tài liệu** | Đưa docs/quyết định/quy ước vào memory để agent truy vấn sau này |
-| **Kho graph** | Knowledge graph — quan hệ giữa khái niệm, module, tính năng |
-| **Kho vector** | Tìm kiếm ngữ nghĩa theo nghĩa |
-| **MCP access** | Agent truy vấn qua tool MCP của memory server |
+| Hỏi về tri thức dự án: yêu cầu, thiết kế, quy ước, kinh nghiệm các run trước | Đọc trạng thái runtime: job Workloop, session agent, tiến độ node |
+| Tìm đoạn tài liệu gốc để dẫn chứng, trích quy định | Lấy artifact và bằng chứng kiểm thử — nằm ở backend Sandbox/TestForge |
+| Tìm quan hệ: chức năng → yêu cầu → dữ liệu → mã nguồn | Lưu trữ file làm việc — dùng [VFS của Sandbox Kit](/docs/user-guides/sandbox-kit/gioi-thieu) |
 
-## Nội dung sẽ bổ sung
+## Các trang trong mục này
 
-- [ ] Cài đặt / kết nối memory server (MCP)
-- [ ] Quy trình nạp tài liệu — chuẩn bị nguồn, định kỳ nạp lại
-- [ ] Cú pháp truy vấn — ví dụ thực tế cho từng kho
-- [ ] Quy ước trích dẫn nguồn trong câu trả lời của agent
-- [ ] Kết quả đúng phải thấy (cho từng mục trên)
+| Trang | Dùng khi |
+|---|---|
+| [Memory → Kết nối](/docs/user-guides/agent-memory-cognee/cai-dat-ket-noi) | Cần biết agent/người quản trị/mọi người kết nối bộ nhớ bằng đường nào |
+| [Memory → Nạp tài liệu](/docs/user-guides/agent-memory-cognee/nap-tai-lieu) | Đưa tài liệu dự án vào bộ nhớ lần đầu hoặc nạp bổ sung |
+| [Memory → Tra cứu](/docs/user-guides/agent-memory-cognee/truy-van-bo-nho) | Đặt câu hỏi cho bộ nhớ, chọn chế độ truy xuất, quy tắc trích nguồn |
+| [Memory → Vòng đời ADLC](/docs/user-guides/agent-memory-cognee/tich-hop-testforge) | Vai trò của bộ nhớ xuyên suốt vòng đời phát triển phần mềm, trong đó có cổng TestForge |
+
+## Kiểm tra nhanh bộ nhớ đang hoạt động
+
+```bash
+curl http://<memory-server>:8010/health
+```
+
+**Kết quả đúng phải thấy:** phản hồi có `status: ready` và `health: healthy`.
 
 ## Liên kết
 
-- Kiến trúc: [Agent Memory](/docs/architecture/tang-3-harness/cognee-agent-memory)
+- Kiến trúc ba kho: [Agent Memory](/docs/architecture/tang-3-harness/cognee-agent-memory)
 - Vai trò trong luồng giao việc: [Luồng End-to-End](/docs/architecture/luong-hoat-dong)
+- Tool MCP tham chiếu: [MCP Tools](/docs/reference/mcp-tools)

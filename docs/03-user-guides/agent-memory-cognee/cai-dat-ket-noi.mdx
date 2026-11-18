@@ -1,0 +1,51 @@
+---
+title: Kết nối bộ nhớ tri thức
+description: Ba đường làm việc với Agent Memory — agent qua MCP, quản trị qua API/web, mọi người qua giao diện web.
+sidebar_position: 2
+sidebar_label: Memory · Kết nối
+---
+
+# Kết nối bộ nhớ tri thức
+
+Có ba đường để làm việc với bộ nhớ, chọn theo nhu cầu:
+
+- **Làm việc thường ngày (agent):** kết nối qua MCP server — cấu hình một lần trong
+  Harness, agent tự hỏi – đáp.
+- **Nạp tài liệu, kiểm tra (người quản trị):** dùng trang web quản trị hoặc lệnh
+  gọi API trực tiếp.
+- **Xem nhanh, tra cứu (mọi người):** mở giao diện web trên trình duyệt.
+
+## Địa chỉ kết nối
+
+| Giao diện | Địa chỉ | Dùng cho |
+|---|---|---|
+| REST API | `http://<memory-server>:8010` | Nạp tài liệu, xử lý nền, truy vấn |
+| MCP server | `http://<memory-server>:8011/mcp` | Agent trong Harness (transport streamable HTTP) |
+| Giao diện web | `http://<memory-server>:3010` | Xem dataset, trực quan hoá knowledge graph |
+
+Địa chỉ `<memory-server>` thật do admin deployment cấp — không ghi URL nội bộ vào tài liệu chung.
+Khi quản trị qua MCP từ máy ngoài server, cần khai báo tên máy được phép kết nối trong cấu hình
+MCP server (biến cho phép host); nếu chưa, server từ chối kết nối.
+
+## Kết nối từ Harness
+
+Agent trong Harness không cấu hình trực tiếp tới Memory Server — **memory bridge** của core
+runtime giữ kết nối MCP. Người vận hành chỉ cần đảm bảo plugin memory có trong profile agent
+(đối chiếu cách nạp plugin với [Kết nối TestForge](/docs/user-guides/testforge/cai-dat-ket-noi))
+và bộ sưu tập cần tra cứu thuộc phạm vi được cấp.
+
+Credential của agent (MCP), của TestForge broker và của Cognee Adapter là **ba bộ riêng, không
+dùng thay nhau** — chi tiết tại [Memory → TestForge](/docs/user-guides/agent-memory-cognee/tich-hop-testforge).
+
+## Kiểm tra kết nối
+
+Trong một phiên DSH đã cấp tool memory, gửi:
+
+```text
+Gọi tool recall với câu hỏi đơn giản về dự án, ví dụ: "dự án này gồm những module nào?".
+Tóm tắt kết quả và nguồn trả về.
+```
+
+**Kết quả đúng phải thấy:** tool trả về kết quả (đoạn trích hoặc câu trả lời) kèm thông tin
+nguồn — tên tệp hoặc bộ sưu tập. Nếu trả về rỗng, kiểm tra bộ sưu tập đã nạp và đã xử lý xong
+chưa ([Memory → Nạp tài liệu](/docs/user-guides/agent-memory-cognee/nap-tai-lieu)).
