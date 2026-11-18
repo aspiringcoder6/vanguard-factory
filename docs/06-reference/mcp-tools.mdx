@@ -50,6 +50,20 @@ Ví dụ sử dụng nhanh: [Gọi tool MCP](/docs/user-guides/workloop-dieu-pho
 | `confluence_create_page` | `space`, `title`, `body_markdown` | tạo trang mới từ Markdown (chuyển wiki markup); trả `{id, version, LINK}` |
 | `confluence_update_page` | `page_id`, `body_markdown`, `title?` | **thay thế toàn bộ** nội dung (không ghép), tự tăng version; title rỗng → giữ tiêu đề cũ |
 
+## Agent Memory (Cognee MCP)
+
+Server MCP **riêng** (khác server `workloop-factory` phía trên); agent trong Harness truy cập qua
+memory bridge của core runtime. Ba thao tác chính:
+
+| Tool | Tham số chính | Trả về / ý nghĩa |
+|---|---|---|
+| `remember` | nội dung/tệp, dataset | nạp dữ liệu và xây tri thức trong một lần gọi |
+| `recall` | câu hỏi, dataset?, chế độ truy xuất?, `top_k`? | kết quả tra cứu theo chế độ chọn (mặc định trả lời liền mạch) |
+| `forget` | dataset / data id | xoá dữ liệu khỏi bộ nhớ |
+
+Danh sách đầy đủ 19 chế độ truy xuất và quy tắc trích nguồn:
+[Memory → Tra cứu](/docs/user-guides/agent-memory-cognee/truy-van-bo-nho).
+
 ## Cấu hình MCP server
 
 Biến môi trường cho server MCP: `WORKLOOP_URL`, `WORKLOOP_TOKEN`, `FACTORY_PATH`,

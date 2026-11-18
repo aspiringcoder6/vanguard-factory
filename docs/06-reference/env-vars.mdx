@@ -56,6 +56,10 @@ deployment thực sự đọc chúng. Xem [Kết nối Harness](/docs/user-guide
 Profile staging có thể có cấu hình credential riêng theo runner. Cài plugin không đồng bộ
 secret giữa Workloop, DSH và broker. Xem [Kết nối TestForge](/docs/user-guides/testforge/cai-dat-ket-noi).
 
+`AGENT_MEMORY_API_URL` trỏ tới **Cognee Adapter** — cổng chuyển tiếp giữa broker và bộ nhớ tri
+thức chung; mã truy cập Adapter không dùng thay mã MCP của plugin Agent Memory
+(xem [Memory → TestForge](/docs/user-guides/agent-memory-cognee/tich-hop-testforge)).
+
 Plugin tham chiếu phân giải kết nối theo mỗi lời gọi; broker mô tả trong
 [PR #5](https://github.com/vanguard-lint/vanguard-factory/pull/5) đọc phần lớn env lúc khởi động.
 Không suy ra thay đổi env broker có hiệu lực chỉ vì đã cập nhật secret phía Harness.
