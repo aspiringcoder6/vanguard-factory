@@ -1,0 +1,62 @@
+---
+title: Bộ nhớ xuyên suốt vòng đời ADLC
+description: Mỗi giai đoạn phát triển phần mềm đều đọc và ghi dấu vết vào bộ nhớ chung — TestForge là một thành phần trong vòng đó.
+sidebar_position: 5
+sidebar_label: Memory · Vòng đời ADLC
+---
+
+# Bộ nhớ xuyên suốt vòng đời ADLC
+
+Memory không phục vụ riêng một công đoạn: **mỗi giai đoạn phát triển phần mềm đều đọc và ghi lại
+dấu vết vào bộ nhớ chung**, tạo thành vòng tri thức khép kín — giai đoạn sau tra cứu được sản
+phẩm của giai đoạn trước mà không phải hỏi lại ai:
+
+| Giai đoạn | Bộ nhớ cung cấp gì | Bộ nhớ ghi lại gì |
+|---|---|---|
+| **Yêu cầu** | Hồ sơ yêu cầu, quy trình nghiệp vụ đã nạp | Câu hỏi làm rõ, quyết định phạm vi |
+| **Thiết kế** | Yêu cầu + ràng buộc liên quan để tra cứu khi thiết kế | Thiết kế hệ thống, cơ sở dữ liệu, phân quyền |
+| **Lập trình** | Thiết kế + quy ước code, liên kết chức năng → yêu cầu | Mã nguồn, cách giải quyết từng vấn đề |
+| **Kiểm thử** | Đặc tả chức năng, quy ước chất lượng để dựng kịch bản | Kết quả kiểm thử, báo lỗi, bằng chứng |
+| **Bàn giao** | Toàn bộ dấu vết trên để truy vết "tính năng này đến từ yêu cầu nào" | Biên bản, hướng dẫn sử dụng |
+
+Nhờ cùng một bộ nhớ, **kết quả của giai đoạn sau không đứng riêng lẻ**: khi một testcase FAIL,
+agent tra cứu được đoạn thiết kế và yêu cầu liên quan ngay tại chỗ, thay vì phải hỏi lại người
+viết yêu cầu. Đây là lý do Memory được đặt ở Tầng 3 (Harness), phục vụ mọi giai đoạn chứ không
+phục vụ riêng công đoạn nào. Toàn cảnh vòng đời xem
+[Vòng đời công việc](/docs/fundamentals/triet-ly/vong-doi-7-tram).
+
+## Giai đoạn kiểm thử — TestForge, một thành phần bên trong
+
+Trong vòng đời trên, TestForge là mắt xích kiểm thử: dùng chung bộ nhớ khi cần ngữ cảnh testcase.
+Vì TestForge và agent phát triển dùng hai bộ mã truy cập khác nhau, giữa chúng có một
+**Cognee Adapter** — cổng chuyển tiếp làm nhiệm vụ dịch giữa hai phía:
+
+| TestForge gọi (Adapter) | Adapter gọi sang bộ nhớ |
+|---|---|
+| Kiểm tra trạng thái (`/v1/health`) | Kiểm tra trạng thái Memory Server |
+| Liệt kê bộ sưu tập (`/v1/datasets`) | Danh sách dataset (kèm xác thực) |
+| Tìm kiếm (`/v1/search?dataset_id&q`) | Truy vấn bộ nhớ theo đoạn gốc (`CHUNKS`) |
+
+- Kết quả được chuẩn hoá về dạng thống nhất: mỗi đoạn gồm **nội dung + nguồn + điểm khớp**.
+- Adapter tự đăng nhập, tự làm mới phiên khi hết hạn, và trả lỗi rõ ràng khi Memory Server không
+  phản hồi — broker không nhìn thấy traceback.
+- Broker trỏ tới Adapter qua biến `AGENT_MEMORY_API_URL`
+  ([Env vars](/docs/reference/env-vars)).
+
+Người vận hành chỉ cần nhớ: **bộ nhớ là một, mã truy cập là ba** (mã của agent, của TestForge, của
+cổng chuyển tiếp) và **không dùng thay nhau**. Cấu hình phía plugin xem
+[Kết nối TestForge với Harness](/docs/user-guides/testforge/cai-dat-ket-noi).
+
+### Tình huống hay gặp
+
+| Hiện tượng | Kiểm tra |
+|---|---|
+| TestForge báo "không kết nối được bộ nhớ" | Cổng chuyển tiếp (Adapter) đang chạy hay dừng; biến `AGENT_MEMORY_API_URL` trỏ đúng chưa |
+| Kết quả tra cứu thiếu nguồn | Bộ sưu tập đã nạp và xử lý xong chưa ([Memory → Nạp tài liệu](/docs/user-guides/agent-memory-cognee/nap-tai-lieu)) |
+| Kết quả tra cứu trả về rỗng | Đúng bộ sưu tập chưa; tài liệu có chứa nội dung câu hỏi không |
+
+*Hướng phát triển tiếp: mở rộng việc ghi dấu vết tự động sang các giai đoạn còn lại, để truy vết
+nghiệp vụ đạt độ phủ cao hơn trên toàn vòng đời.*
+
+**Kết quả đúng phải thấy:** từ một job kiểm thử có FAIL, agent gọi tool tra cứu bộ nhớ và nhận
+được đoạn thiết kế/yêu cầu liên quan kèm nguồn — không cần hỏi thêm ai.

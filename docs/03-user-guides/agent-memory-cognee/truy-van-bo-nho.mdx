@@ -1,0 +1,96 @@
+---
+title: Tra cứu bộ nhớ
+description: Đặt câu hỏi cho Agent Memory — 19 chế độ truy xuất, tự định tuyến câu hỏi, tham số và quy tắc trích nguồn.
+sidebar_position: 4
+sidebar_label: Memory · Tra cứu
+---
+
+# Tra cứu bộ nhớ
+
+Agent (hoặc người quản trị qua API) đặt câu hỏi cho bộ nhớ. Bộ nhớ hỗ trợ **19 chế độ truy xuất**,
+chia thành 4 nhóm theo nhu cầu. Chọn đúng chế độ giúp kết quả nhanh và đúng ý; không chắc thì dùng
+chế độ mặc định hoặc để hệ thống tự chọn.
+
+## Nhóm 1 — Trả lời liền mạch (dùng thường xuyên nhất)
+
+| Chế độ | Khi nào dùng |
+|---|---|
+| `HYBRID_COMPLETION` *(mặc định)* | Câu hỏi hằng ngày — kết hợp đoạn văn gốc + thực thể lân cận trong đồ thị rồi viết câu trả lời |
+| `RAG_COMPLETION` | Câu hỏi trực tiếp, chỉ cần trả lời từ đoạn văn bản, không cần quan hệ |
+| `GRAPH_COMPLETION` | Phân tích, tổng hợp dựa trên cấu trúc quan hệ của đồ thị |
+| `GRAPH_COMPLETION_COT` | Câu hỏi "vì sao", cần suy luận nhiều bước (theo chuỗi quan hệ) |
+| `GRAPH_COMPLETION_DECOMPOSITION` | Câu hỏi phức tạp — hệ thống tự tách thành các câu nhỏ rồi ghép trả lời |
+| `GRAPH_COMPLETION_CONTEXT_EXTENSION` | Câu hỏi quan hệ xa ("A liên quan B thế nào") — mở rộng ngữ cảnh nhiều vòng |
+| `GRAPH_SUMMARY_COMPLETION` | Tóm tắt chủ đề lớn, có tính đến quan hệ |
+| `AGENTIC_COMPLETION` | Để hệ thống tự quyết định cách truy xuất nhiều bước |
+
+## Nhóm 2 — Lấy đoạn gốc / tóm tắt sẵn
+
+| Chế độ | Khi nào dùng |
+|---|---|
+| `CHUNKS` | Lấy đúng đoạn văn gốc để dẫn chứng, trích quy định |
+| `CHUNKS_LEXICAL` | Tìm theo **từ khóa chính xác** (đặt cụm trong ngoặc kép) |
+| `SUMMARIES` | Lấy bản tóm tắt đã tạo sẵn cho từng nội dung |
+| `TRIPLET_COMPLETION` | Trả lời từ các cặp quan hệ "A — B" ghi trong đồ thị |
+
+## Nhóm 3 — Chuyên sâu cho code và dữ liệu
+
+| Chế độ | Khi nào dùng |
+|---|---|
+| `CODE` | Tra hàm, lớp, module trong đồ thị mã nguồn (không cần LLM) |
+| `CODING_RULES` | Quy tắc lập trình, best practice, gợi ý review code |
+| `CYPHER` | Người am hiểu chạy trực tiếp truy vấn đồ thị (cần được bật trong cấu hình) |
+| `NATURAL_LANGUAGE` | Hỏi bằng tiếng Việt, hệ thống tự dịch thành truy vấn đồ thị |
+| `TEMPORAL` | Câu hỏi về thời điểm, thứ tự thay đổi |
+
+## Nhóm 4 — Tiện ích
+
+| Chế độ | Khi nào dùng |
+|---|---|
+| `FEELING_LUCKY` | Chưa chắc chọn chế độ nào — hệ thống tự chọn chế độ phù hợp nhất cho câu hỏi |
+| `GRAPH_REPORT` | Báo cáo tổng quan bộ sưu tập: các nút trung tâm, liên kết đáng chú ý, câu hỏi gợi ý |
+
+## Hệ thống tự định tuyến câu hỏi
+
+Nếu không chỉ định chế độ, bộ định tuyến nội bộ đọc câu hỏi và chấm điểm chọn chế độ phù hợp
+(theo từ khóa "vì sao" → suy luận nhiều bước, "tóm tắt" → tóm tắt, cụm trong ngoặc kép → tìm
+chính xác...). Vì vậy người mới có thể **cứ hỏi tự nhiên** và để hệ thống tự chọn.
+
+## Tham số khi truy vấn
+
+| Tham số | Ý nghĩa |
+|---|---|
+| Số kết quả (`top_k`) | Mặc định 10, tối đa 100 |
+| Bộ sưu tập (`datasets`) | Giới hạn tra cứu trong một hoặc vài bộ sưu tập |
+| Định dạng kết quả | Đọc trực tiếp hoặc JSON |
+| Câu lệnh hệ thống (`system_prompt`) | Tùy chỉnh cách trả lời cho chế độ trả lời liền mạch |
+
+Ví dụ truy vấn qua API:
+
+```bash
+curl -X POST http://<memory-server>:8010/api/v1/search \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"search_type":"CHUNKS","datasets":["ten_bo_suu_tap"],"query":"yêu cầu bảo mật hệ thống","top_k":3}'
+```
+
+## Tra cứu qua MCP (agent trong Harness)
+
+Agent trong Harness dùng ba thao tác:
+
+| Tool | Dùng cho |
+|---|---|
+| `remember` | Ghi nhớ ngay trong phiên: nạp nội dung và xây tri thức trong một lần gọi |
+| `recall` | Hỏi bộ nhớ — chọn chế độ truy xuất theo bảng trên |
+| `forget` | Xoá dữ liệu không còn dùng khỏi bộ nhớ |
+
+## Quy tắc trích dẫn nguồn
+
+- Mỗi đoạn tra cứu đều mang **thông tin nguồn** (tên tệp, bộ sưu tập) — agent giữ lại và dẫn kèm
+  câu trả lời.
+- Ngữ cảnh lấy từ bộ nhớ phải được **đối chiếu với yêu cầu đã duyệt** trước khi dùng — cùng nguyên
+  tắc với [quy trình kiểm thử TestForge](/docs/user-guides/testforge/quy-trinh-kiem-thu).
+- Thông tin thiếu hoặc nghi đã cũ: báo lại cho người phụ trách, **không tự suy diễn**.
+
+**Kết quả đúng phải thấy:** câu trả lời tiếng Việt giữ nguyên ý, kèm tên tài liệu nguồn. Ví dụ đã
+thử: hỏi "yêu cầu bảo mật hệ thống" trên bộ hồ sơ yêu cầu TNQĐ — hệ thống trả đúng đoạn quy định
+bảo mật cấp 3 theo Nghị định 85/2016/NĐ-CP.

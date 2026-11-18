@@ -1,0 +1,71 @@
+---
+title: Nạp tài liệu vào bộ nhớ
+description: Quy trình 4 bước đưa tài liệu dự án vào Agent Memory — chuẩn bị nguồn, nạp tệp, xử lý nền, kiểm tra.
+sidebar_position: 3
+sidebar_label: Memory · Nạp tài liệu
+---
+
+# Nạp tài liệu vào bộ nhớ
+
+Quy trình nạp một bộ sưu tập gồm bốn bước. Mỗi bộ sưu tập làm độc lập — nạp xong bộ này không
+ảnh hưởng bộ khác.
+
+## Bốn bước
+
+**Bước 1 — Chuẩn bị nguồn:** chọn tài liệu thuộc cùng một bộ sưu tập; mỗi tệp nạp riêng, hệ thống
+tự ghi lại tệp đã nạp thành công nên nếu gián đoạn, chạy lại sẽ **tự bỏ qua phần đã xong**, không
+nạp trùng.
+
+**Bước 2 — Nạp tệp:** gửi từng tệp vào bộ sưu tập (lệnh mẫu kèm dưới). Tệp đầu tiên tạo bộ sưu tập
+nếu chưa tồn tại.
+
+**Bước 3 — Kích hoạt xử lý:** yêu cầu hệ thống đọc – nối – ghi nhớ; bước này chạy
+nền, không cần chờ.
+
+**Bước 4 — Kiểm tra:** hỏi trạng thái đến khi hiện "hoàn thành".
+
+## Lệnh mẫu đầy đủ 4 bước (đã kiểm tra chạy thật trên hệ thống)
+
+```bash
+# Đăng nhập, nhận mã truy cập ($TOKEN dùng cho cả 3 bước sau)
+curl -X POST http://<memory-server>:8010/api/v1/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "username=<tài-khoản>" --data-urlencode "password=<mật-khẩu>"
+
+# Bước 2 — nạp từng tệp (chỉ định bộ sưu tập; tệp mới thì chưa có, hệ thống tự tạo)
+curl -X POST http://<memory-server>:8010/api/v1/add \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "datasetName=ten_bo_suu_tap" \
+  -F "data=@tai-lieu.docx"
+
+# Bước 3 — kích hoạt xử lý nền (trả về ngay, không chờ)
+curl -X POST http://<memory-server>:8010/api/v1/cognify \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"datasets":["ten_bo_suu_tap"],"run_in_background":true}'
+
+# Bước 4 — theo dõi trạng thái
+curl "http://<memory-server>:8010/api/v1/datasets/status?dataset_name=ten_bo_suu_tap" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+:::caution[Đọc kết quả trạng thái]
+Trang trạng thái hiện liệt kê **tất cả** các lần xử lý chứ chưa lọc theo tên
+bộ sưu tập (tham số `dataset_name` chưa phát huy tác dụng) — cần đối chiếu
+**mã bộ sưu tập** (`dataset_id`) khi đọc kết quả.
+:::
+
+## Chuẩn bị nguồn
+
+- **Định dạng hỗ trợ:** `.docx`, `.xlsx`, `.pdf`, `.md` — hệ thống đọc được cả bảng tính
+  và tài liệu quét.
+- **Đặt tên bộ sưu tập theo phạm vi:** tên dự án + loại nội dung (ví dụ `duan_yeucau`,
+  `duan_thietke`); bộ sưu tập riêng của agent đặt hậu tố `_agentmemory_memory`.
+- **Tài liệu cùng một bộ sưu tập phải cùng phạm vi** — trộn nhiều dự án vào một bộ làm
+  kết quả tra cứu nhiễu và khó phân quyền.
+- **Nạp lại khi tài liệu đổi:** nạp tệp phiên bản mới vào cùng bộ sưu tập rồi chạy lại
+  xử lý; kết quả tra cứu theo thông tin mới nhất.
+
+**Kết quả đúng phải thấy:** trạng thái `DATASET_PROCESSING_COMPLETED` cho mỗi lần xử lý. Sau đó
+thử một câu hỏi trên bộ sưu tập vừa nạp theo
+[Memory → Tra cứu](/docs/user-guides/agent-memory-cognee/truy-van-bo-nho) để xác nhận tri thức
+đã sẵn sàng.
