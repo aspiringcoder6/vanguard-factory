@@ -304,7 +304,7 @@ h6,
   display: inline-flex;
   align-items: center;
   height: 34px;
-  padding: 0 14px;
+  padding: 4px 14px 0;
   border-radius: 8px;
   font-family: var(--ifm-font-family-base);
   font-weight: 600;
@@ -342,6 +342,18 @@ h6,
   padding: 8px 16px;
 }
 
+/* Ẩn announcement bar trên các trang docs — bar chỉ dùng cho landing/blog.
+   Lưu ý: Docusaurus gắn class "docs-wrapper plugin-docs..." trực tiếp lên <html>,
+   không phải div trong body, nên selector phải nhắm html.docs-wrapper.
+   Phải đặt cả biến chiều cao về 0, nếu không navbar vẫn bị đẩy xuống 30px hở khoảng trống. */
+html.docs-wrapper {
+  --docusaurus-announcement-bar-height: 0px;
+}
+
+html.docs-wrapper .theme-announcement-bar {
+  display: none;
+}
+
 .theme-announcement-bar a {
   color: #ff8d84;
   font-weight: 600;
@@ -353,12 +365,14 @@ h6,
 }
 
 /* ===== Hệ nút: primary = đỏ đặc, secondary = viền (outline) ===== */
+/* Hiệu chỉnh quang học: Overpass + dấu tiếng Việt khiến mực chữ ngồi cao hơn
+   tâm flex ~1.5px (đo bằng pixel). padding-top lệch đẩy chữ về tâm quang học. */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 40px;
-  padding: 0 20px;
+  padding: 3px 20px 0;
   font-weight: 600;
   font-size: 0.95rem;
   border: 1px solid transparent;
@@ -652,4 +666,20 @@ h6,
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
+}
+
+/* ===== Cột đọc & tiêu đề docs ===== */
+/* Cột đọc 810px như mặc định, căn giữa trong cha (margin auto) */
+article .markdown {
+  max-width: 810px;
+  margin-inline: auto;
+}
+
+/* Tiêu đề docs nhỏ hơn một bậc: h1 48px -> 44px, h2 32px -> 30px */
+.markdown h1:first-child {
+  --ifm-h1-font-size: 2.75rem;
+}
+
+.markdown > h2 {
+  --ifm-h2-font-size: 1.875rem;
 }

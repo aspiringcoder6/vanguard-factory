@@ -68,8 +68,9 @@ const mermaidMonoVariables = {
 
 const config: Config = {
   title: 'ADLC Factory',
-  tagline: 'Tài liệu hệ thống ADLC — điều phối · harness · sandbox · kiểm chứng',
-  favicon: 'img/favicon.ico',
+  tagline: 'Tài liệu hệ thống ADLC — workflow điều phối và kiểm thử tự động',
+  // Favicon theo chuẩn vanguard-spec: dùng nguyên logo SVG (vector, nền trong suốt)
+  favicon: 'img/logo-vanguard.svg',
 
   // Docusaurus 3.10 (future.v4) không tự quét thư mục src/clientModules —
   // phải khai báo tường minh tại đây.
@@ -148,8 +149,8 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
-    image: 'img/docusaurus-social-card.jpg',
+    // Social card theo brand Vanguard (nen den + logo do) — hien khi share link
+    image: 'img/social-card.png',
     colorMode: {
       respectPrefersColorScheme: true,
     },
